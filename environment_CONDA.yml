@@ -1,0 +1,16 @@
+name: news_analysis
+channels:
+  - plotly
+  - conda-forge
+  - defaults
+dependencies:
+  - plotly=5.1.0
+  - streamlit
+  - natsort
+  - colorlover=0.3.0
+  - spacy=3.1.2
+  - nltk=3.6.5
+  - wordcloud=1.8.1
+  - gensim=4.1.2
+  - textblob=0.15.3
+  - scikit-learn

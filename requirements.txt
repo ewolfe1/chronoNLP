@@ -2,7 +2,8 @@ plotly==5.1.0
 streamlit
 natsort
 colorlover==0.3.0
-spacy==3.1.2
+spacy==3.2.1
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.2.0/en_core_web_sm-3.2.0.tar.gz
 nltk==3.6.5
 wordcloud==1.8.1
 gensim==4.1.2

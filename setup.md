@@ -2,9 +2,42 @@
 
 ## Startup the environment
 
+### Venv
+
+Create the environment (first run only)
+
+    $python -m venv venv/
+
+**Start the environment**
+
+    $source venv/bin/activate
+
+Load additional libraries (first run only)
+
+    $pip install -r requirements.txt
+    $python -m spacy download en_core_web_sm
+
+**Run the app**
+
+    $streamlit run app.py
+
+Update the environment, e.g. changes to requirements.txt
+
+    *TBD*
+
+Close the environment
+
+    $deactivate
+
+Remove the environment
+
+    $rm -r venv/
+
 ### Conda
 
-*Note: Conda seems to load and run app a bit faster than venv*
+*Note: Conda seems to load and run app a bit faster than venv, but requires a few extra steps*
+
+Rename environment_CONDA.yml to environment.yml
 
 Create the environment (first run only)
 
@@ -36,34 +69,3 @@ Close the environment
 Remove the environment
 
     $conda env remove -n news_analysis
-
-### Venv
-
-Create the environment (first run only)
-
-    $python -m venv venv/
-
-**Start the environment**
-
-    $source venv/bin/activate
-
-Load additional libraries (first run only)
-
-    $pip install -r requirements.txt
-    $python -m spacy download en_core_web_sm
-
-**Run the app**
-
-    $streamlit run app.py
-
-Update the environment, e.g. changes to requirements.txt
-
-    TBD
-
-Close the environment
-
-    $deactivate
-
-Remove the environment
-
-    $rm -r venv/
