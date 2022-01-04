@@ -1,4 +1,4 @@
-# Using virtual environment to create a Streamlit application
+# Using virtual environment to create a local Streamlit application
 
 ## Startup the environment
 
@@ -16,8 +16,8 @@ Create the environment (first run only)
 
 Load additional dataset (first run only)
 
-    $pip install hydralit
     $python -m spacy download en_core_web_sm
+    $pip install hydralit
     $pip install textdescriptives
     $pip install multi_rake
 
@@ -35,7 +35,7 @@ Close the environment
 
 Remove the environment
 
-    $conda env remove -n text_analysis
+    $conda env remove -n news_analysis
 
 ### Venv
 

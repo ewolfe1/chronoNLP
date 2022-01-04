@@ -150,7 +150,7 @@ class topics(HydraHeadApp):
 
                 with sa_cols[0]:
 
-                    st.markdown(f'## Topic {i+1}ßß')
+                    st.markdown(f'## Topic {i+1}')
                     st.markdown(f'**Statistically present in** {num_all} articles')
                     st.markdown(f'**Primary topic in** {num_top} articles')
 

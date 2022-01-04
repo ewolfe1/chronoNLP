@@ -1,5 +1,5 @@
 from hydralit import HydraApp
-import hydralit_components as hc
+# import hydralit_components as hc
 import streamlit as st
 st.set_page_config(page_title='News Article Explorer', page_icon=':newspaper:', layout='wide',initial_sidebar_state='collapsed')
 from datetime import datetime
@@ -82,8 +82,11 @@ if __name__ == '__main__':
         df_filtered.reset_index(inplace=True)
         date_df = getdata.get_date_df(df_filtered)
         months = getdata.get_months(df_filtered)
-        s_date = datetime.strftime(datetime.strptime(start_date, "%Y-%m"), "%B %Y")
-        e_date = datetime.strftime(datetime.strptime(end_date, "%Y-%m"), "%B %Y")
+        # s_date = datetime.strftime(datetime.strptime(start_date, "%Y-%m"), "%B %Y")
+        # e_date = datetime.strftime(datetime.strptime(end_date, "%Y-%m"), "%B %Y")
+        s_date = datetime.strftime(datetime.strptime(df_filtered.date.min(), "%Y-%m-%d"), "%B %-d, %Y")
+        e_date = datetime.strftime(datetime.strptime(df_filtered.date.max(), "%Y-%m-%d"), "%B %-d, %Y")
+
 
     st.markdown(f'Reviewing data for **{len(df_filtered):,} articles** from **{len(df_filtered.source.unique())} sources** ({s_date} - {e_date})')
 
