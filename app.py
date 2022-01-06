@@ -5,7 +5,7 @@ st.set_page_config(page_title='News Article Explorer', page_icon=':newspaper:', 
 from datetime import datetime
 from natsort import natsorted
 # Custom imports
-from scripts import getdata
+from scripts/getdata import *
 from pages import home, technical, sentiment, termfreq, topics, search
 
 # Create an instance of the app
