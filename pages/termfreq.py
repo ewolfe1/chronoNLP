@@ -6,6 +6,7 @@ from hydralit import HydraHeadApp
 from scripts import tfproc
 import textblob
 import subprocess
+import sys
 
 class termfreq(HydraHeadApp):
 
@@ -13,7 +14,7 @@ class termfreq(HydraHeadApp):
 
         @st.cache
         def tb_corpora():
-            cmd = ['python3','-m','textblob.download_corpora']
+            cmd = [f"{sys.executable}","-m","textblob.download_corpora"]
             subprocess.run(cmd)
 
         tb_corpora()
