@@ -4,10 +4,19 @@ import numpy as np
 from natsort import natsorted
 from hydralit import HydraHeadApp
 from scripts import tfproc
+import textblob
+import subprocess
 
 class termfreq(HydraHeadApp):
 
     def run(self):
+
+        @st.cache
+        def tb_corpora():
+            cmd = ['python3','-m','textblob.download_corpora']
+            subprocess.run(cmd)
+
+        tb_corpora()
 
         def tf_form(tf):
 
