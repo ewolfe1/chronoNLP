@@ -12,3 +12,4 @@ hydralit==1.0.10
 scikit-learn==1.0.1
 multi_rake==0.0.2
 textdescriptives==1.0.6
+tensorflow==2.6.0
