@@ -4,12 +4,19 @@ import streamlit as st
 st.set_page_config(page_title='News Article Explorer', page_icon=':newspaper:', layout='wide',initial_sidebar_state='collapsed')
 from datetime import datetime
 from natsort import natsorted
+
 # Custom imports
 from scripts import getdata
 from pages import home, technical, sentiment, termfreq, topics, search
 
-# Create an instance of the app
-#app = MultiPage()
+import subprocess
+
+@st.cache
+def tb_corpora():
+    cmd = ['python3','-m','textblob.download_corpora']
+    subprocess.run(cmd)
+
+tb_corpora()
 
 # hack for styling - may be deprecated in future
 st.write("""<style>

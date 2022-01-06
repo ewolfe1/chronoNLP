@@ -17,6 +17,7 @@ from hydralit import HydraHeadApp
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 
+
 # wordcloud
 def get_wc(tf):
 

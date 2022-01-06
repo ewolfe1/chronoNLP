@@ -21,7 +21,7 @@ class search(HydraHeadApp):
 
     def run(self):
 
-        @st.cache
+        @st.experimental_memo
         def load_model():
         	  return spacy.load("en_core_web_sm")
 
