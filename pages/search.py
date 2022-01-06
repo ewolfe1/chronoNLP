@@ -12,9 +12,7 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 # spacy
 import spacy
-nlp = spacy.load("en_core_web_sm")
 from nltk import FreqDist
-
 
 from scripts import saproc
 from hydralit import HydraHeadApp
@@ -22,6 +20,12 @@ from hydralit import HydraHeadApp
 class search(HydraHeadApp):
 
     def run(self):
+
+        @st.cache
+        def load_model():
+        	  return spacy.load("en_core_web_sm")
+
+        nlp = load_model()
 
         # plot a single term across multiple sources
         @st.experimental_memo
