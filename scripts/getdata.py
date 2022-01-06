@@ -3,19 +3,25 @@ import numpy as np
 from natsort import natsorted
 from datetime import datetime
 import streamlit as st
-
 import spacy
-nlp = spacy.load("en_core_web_sm")
 from spacy.lang.en.stop_words import STOP_WORDS
-nlp.Defaults.stop_words |= {'the','we','she','he','said','it','like'}
 import textdescriptives as td
-nlp.add_pipe('textdescriptives')
+import nltk
+nltk.download('vader_lexicon')
+analyzer = nltk.sentiment.vader.SentimentIntensityAnalyzer()
 
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
-analyzer = SentimentIntensityAnalyzer()
 import json
 from tensorflow.keras.preprocessing.text import Tokenizer, tokenizer_from_json
 from ast import literal_eval
+
+@st.experimental_memo
+def load_model():
+    nlp = spacy.load("en_core_web_sm")
+    nlp.add_pipe('textdescriptives')
+    nlp.Defaults.stop_words |= {'the','we','she','he','said','it','like'}
+
+nlp = load_model()
+
 
 @st.experimental_memo
 def get_date_df(df):

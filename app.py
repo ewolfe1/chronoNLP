@@ -28,8 +28,8 @@ def get_date_range(start_date, end_date, df):
 
     return start_date, end_date, df_filtered
 
-#if __name__ == '__main__':
 
+# start app
 over_theme = {'txc_inactive': '#ffffff','menu_background':'#8A93DE'}
 app = HydraApp(
     title='Exploring newspaper data',
