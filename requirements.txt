@@ -1,5 +1,5 @@
 plotly==5.1.0
-streamlit==1.3.1
+streamlit
 natsort==7.1.1
 colorlover==0.3.0
 spacy==3.2.1
@@ -13,3 +13,4 @@ scikit-learn==1.0.1
 multi_rake==0.0.2
 textdescriptives==1.0.6
 tensorflow==2.6.0
+numpy
