@@ -36,7 +36,7 @@ class technical(HydraHeadApp):
             fig.update_yaxes(title_text="Articles", secondary_y=False, showgrid=False)
 
             # include cases as line graph
-            cv_data = getdata.get_case_data()
+            cv_data = getdata.get_case_data(st.session_state.case_csv)
 
             # cases
             fig.add_trace(go.Scatter(x=[datetime.strftime(n,'%b %Y') for n,g in cv_data], y=[g.newcases.mean() for n,g in cv_data],

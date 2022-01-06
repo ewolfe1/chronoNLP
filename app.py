@@ -8,15 +8,7 @@ from natsort import natsorted
 # Custom imports
 from scripts import getdata
 from pages import home, technical, sentiment, termfreq, topics, search
-import textblob
-import subprocess
 
-@st.cache
-def tb_corpora():
-    cmd = ['python3','-m','textblob.download_corpora']
-    subprocess.run(cmd)
-
-tb_corpora()
 
 # hack for styling - may be deprecated in future
 st.write("""<style>
@@ -61,6 +53,7 @@ app.add_app("Topic modeling", topics.topics())
 # set input data files
 current_csv = 'data/current_articles.csv'
 tk_js = 'data/tokenizer.json'
+case_csv = 'data/us-counties-douglas-ks.csv'
 
 # placeholder for status updates
 placeholder = st.empty()
@@ -105,6 +98,7 @@ st.session_state.df = df
 st.session_state.df_filtered = df_filtered
 st.session_state.date_df = date_df
 st.session_state.months = months
+st.session_state.case_csv = case_csv
 
 placeholder.empty()
 

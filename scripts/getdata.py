@@ -90,10 +90,10 @@ def get_data(current_csv, tk_js):
 
     return df
 
-def get_case_data():
+def get_case_data(case_csv):
 
     # 'https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv'
-    cv_data = pd.read_csv('../data/us-counties-douglas-ks.csv')
+    cv_data = pd.read_csv(case_csv)
     cv_data['month'] = cv_data['date'].apply(lambda x: x[:7])
     cv_data  = cv_data[(cv_data['month'] >= st.session_state.start_date) & (cv_data['month'] <= st.session_state.end_date)]
 
