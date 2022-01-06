@@ -8,7 +8,8 @@ from spacy.lang.en.stop_words import STOP_WORDS
 import textdescriptives as td
 import nltk
 nltk.download('vader_lexicon')
-analyzer = nltk.sentiment.vader.SentimentIntensityAnalyzer()
+from nltk.sentiment.vader import SentimentIntensityAnalyzer
+analyzer = SentimentIntensityAnalyzer()
 
 import json
 from tensorflow.keras.preprocessing.text import Tokenizer, tokenizer_from_json
