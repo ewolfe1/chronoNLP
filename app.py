@@ -8,7 +8,7 @@ from natsort import natsorted
 # Custom imports
 from scripts import getdata
 from pages import home, technical, sentiment, termfreq, topics, search
-
+import textblob
 import subprocess
 
 @st.cache
