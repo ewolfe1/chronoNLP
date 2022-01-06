@@ -17,6 +17,15 @@ from hydralit import HydraHeadApp
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 
+import subprocess
+import textblob
+
+@st.cache
+def tb_corpora():
+    cmd = ['python3','-m','textblob.download_corpora']
+    subprocess.run(cmd)
+
+tb_corpora()
 
 # wordcloud
 def get_wc(tf):
