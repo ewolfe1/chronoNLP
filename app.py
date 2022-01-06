@@ -28,78 +28,78 @@ def get_date_range(start_date, end_date, df):
 
     return start_date, end_date, df_filtered
 
-if __name__ == '__main__':
+#if __name__ == '__main__':
 
-    over_theme = {'txc_inactive': '#ffffff','menu_background':'#8A93DE'}
-    app = HydraApp(
-        title='Exploring newspaper data',
-        favicon=':newspaper:',
-        use_navbar=True,
-        navbar_sticky=True,
-        hide_streamlit_markers=False,
-        navbar_animation=False,
-        navbar_theme=over_theme
-    )
+over_theme = {'txc_inactive': '#ffffff','menu_background':'#8A93DE'}
+app = HydraApp(
+    title='Exploring newspaper data',
+    favicon=':newspaper:',
+    use_navbar=True,
+    navbar_sticky=True,
+    hide_streamlit_markers=False,
+    navbar_animation=False,
+    navbar_theme=over_theme
+)
 
-    # Add all your application here
-    app.add_app("Home", home.home())
-    app.add_app("Technical analysis", technical.technical())
-    app.add_app("Search", search.search())
-    app.add_app("Sentiment analysis", sentiment.sentiment())
-    app.add_app("Term frequency", termfreq.termfreq())
-    app.add_app("Topic modeling", topics.topics())
+# Add all your application here
+app.add_app("Home", home.home())
+app.add_app("Technical analysis", technical.technical())
+app.add_app("Search", search.search())
+app.add_app("Sentiment analysis", sentiment.sentiment())
+app.add_app("Term frequency", termfreq.termfreq())
+app.add_app("Topic modeling", topics.topics())
 
-    #app.add_loader_app(None)
+#app.add_loader_app(None)
 
-    # set input data files
-    current_csv = 'data/current_articles.csv'
-    tk_js = 'data/tokenizer.json'
+# set input data files
+current_csv = 'data/current_articles.csv'
+tk_js = 'data/tokenizer.json'
 
-    # placeholder for status updates
-    placeholder = st.empty()
-    placeholder.markdown('*. . . Initializing . . .*\n\n')
+# placeholder for status updates
+placeholder = st.empty()
+placeholder.markdown('*. . . Initializing . . .*\n\n')
 
-    # configure data range and filter data
-    df = getdata.get_data(current_csv, tk_js)
-    df, months = getdata.get_months(df)
+# configure data range and filter data
+df = getdata.get_data(current_csv, tk_js)
+df, months = getdata.get_months(df)
 
-    placeholder.markdown('*. . . Pre-processing data . . .*\n\n')
+placeholder.markdown('*. . . Pre-processing data . . .*\n\n')
 
-    # leave as placeholder for preprocessing on the fly
-    # much quicker to do in advance (~5 min for 3,500 articles)
-    # df = getdata.preprocess(df)
+# leave as placeholder for preprocessing on the fly
+# much quicker to do in advance (~5 min for 3,500 articles)
+# df = getdata.preprocess(df)
 
-    # sentiment analysis - ~ 30 seconds for 3,500 articles
-    df = getdata.get_sa(df, placeholder)
+# sentiment analysis - ~ 30 seconds for 3,500 articles
+df = getdata.get_sa(df, placeholder)
 
-    placeholder.empty()
+placeholder.empty()
 
-    # date selector
-    with st.sidebar:
-        start_date, end_date = st.select_slider('Select a custom date range',
-             options=months, value=(months[0],months[-1]), key='date_home')
-        df_filtered = df[(df['month'] >= start_date) & (df['month'] <= end_date)]
-        df_filtered.reset_index(inplace=True)
-        date_df = getdata.get_date_df(df_filtered)
-        months = getdata.get_months(df_filtered)
-        # s_date = datetime.strftime(datetime.strptime(start_date, "%Y-%m"), "%B %Y")
-        # e_date = datetime.strftime(datetime.strptime(end_date, "%Y-%m"), "%B %Y")
-        s_date = datetime.strftime(datetime.strptime(df_filtered.date.min(), "%Y-%m-%d"), "%B %-d, %Y")
-        e_date = datetime.strftime(datetime.strptime(df_filtered.date.max(), "%Y-%m-%d"), "%B %-d, %Y")
+# date selector
+with st.sidebar:
+    start_date, end_date = st.select_slider('Select a custom date range',
+         options=months, value=(months[0],months[-1]), key='date_home')
+    df_filtered = df[(df['month'] >= start_date) & (df['month'] <= end_date)]
+    df_filtered.reset_index(inplace=True)
+    date_df = getdata.get_date_df(df_filtered)
+    months = getdata.get_months(df_filtered)
+    # s_date = datetime.strftime(datetime.strptime(start_date, "%Y-%m"), "%B %Y")
+    # e_date = datetime.strftime(datetime.strptime(end_date, "%Y-%m"), "%B %Y")
+    s_date = datetime.strftime(datetime.strptime(df_filtered.date.min(), "%Y-%m-%d"), "%B %-d, %Y")
+    e_date = datetime.strftime(datetime.strptime(df_filtered.date.max(), "%Y-%m-%d"), "%B %-d, %Y")
 
 
-    st.markdown(f'Reviewing data for **{len(df_filtered):,} articles** from **{len(df_filtered.source.unique())} sources** ({s_date} - {e_date})')
+st.markdown(f'Reviewing data for **{len(df_filtered):,} articles** from **{len(df_filtered.source.unique())} sources** ({s_date} - {e_date})')
 
-    st.session_state.start_date = start_date
-    st.session_state.s_date = s_date
-    st.session_state.end_date = end_date
-    st.session_state.e_date = e_date
-    st.session_state.df = df
-    st.session_state.df_filtered = df_filtered
-    st.session_state.date_df = date_df
-    st.session_state.months = months
+st.session_state.start_date = start_date
+st.session_state.s_date = s_date
+st.session_state.end_date = end_date
+st.session_state.e_date = e_date
+st.session_state.df = df
+st.session_state.df_filtered = df_filtered
+st.session_state.date_df = date_df
+st.session_state.months = months
 
-    placeholder.empty()
+placeholder.empty()
 
-    # The main app
-    app.run()
+# The main app
+app.run()
