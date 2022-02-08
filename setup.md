@@ -1,8 +1,8 @@
-# Using virtual environment to create a local Streamlit application
+# Using virtual environment to create local Streamlit application
 
-## Startup the environment
+## Venv
 
-### Venv
+*This method is also easier to use with Streamlit Sharing, as not all libraries are available in conda*
 
 Create the environment (first run only)
 
@@ -12,18 +12,13 @@ Create the environment (first run only)
 
     $source venv/bin/activate
 
-Load additional libraries (first run only)
+Load additional libraries (first run only, or if requirements change)
 
     $pip install -r requirements.txt
-    $python -m spacy download en_core_web_sm
 
 **Run the app**
 
     $streamlit run app.py
-
-Update the environment, e.g. changes to requirements.txt
-
-    *TBD*
 
 Close the environment
 
@@ -33,9 +28,9 @@ Remove the environment
 
     $rm -r venv/
 
-### Conda
+## Conda
 
-*Note: Conda seems to load and run app a bit faster than venv, but requires a few extra steps*
+*Note: Conda seems to load and run app a bit faster than venv, but requires a few extra steps*  
 
 Rename environment_CONDA.yml to environment.yml
 

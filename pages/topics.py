@@ -3,6 +3,7 @@ from streamlit import components
 import pandas as pd
 from datetime import datetime
 import plotly.graph_objs as go
+from plotly.subplots import make_subplots
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import colorlover as cl
@@ -100,6 +101,23 @@ class topics(HydraHeadApp):
 
             return fig
 
+        def plot_coherence(coherence_df):
+
+            coherence_df['Number of topics'] = coherence_df['Number of topics'].astype(int)
+            coherence_df.set_index('Number of topics', inplace=True)
+
+            fig = make_subplots(specs=[[{"secondary_y": True}]], x_title='Number of topics')
+
+            fig.add_trace(go.Scatter(x=coherence_df.index, y=coherence_df['Coherence'],
+                                    mode='lines'))
+            fig.update_yaxes(title_text="Coherence", secondary_y=False, showgrid=False)
+
+            fig.add_trace(go.Scatter(x=coherence_df.index, y=coherence_df['Perplexity'],
+                                    mode='lines'), secondary_y=True)
+            fig.update_yaxes(title_text="Perplexity", secondary_y=True, showgrid=False)
+
+            return fig
+
         date_df = st.session_state.date_df
         df_filtered = st.session_state.df_filtered
 
@@ -107,6 +125,7 @@ class topics(HydraHeadApp):
         data = [t.split() for t in df_filtered.clean_text.values.tolist()]
 
         # placeholder for status updates
+        topic_placeholder = st.empty()
         placeholder = st.empty()
 
         # header
@@ -172,6 +191,8 @@ class topics(HydraHeadApp):
 
                 sa_cols[2].pyplot(wc)
 
+        placeholder.empty()
+
         # evaluate topics
         with st.expander('Change number of topics'):
 
@@ -184,7 +205,13 @@ class topics(HydraHeadApp):
             topic_btn = st.button(label='Explore number of topics')
             if topic_btn:
 
+                coherence_df = pd.DataFrame()
+                ct = 1
+
                 for num_topics in range(5,16):
+
+                    topic_placeholder.markdown(f'. . . *Evaluating coherence of {num_topics} topics ({ct} of 11)* . . .')
+                    ct += 1
                     lda_model_results = get_lda_model(id2word, corpus, num_topics)
 
                     # Compute Perplexity - a measure of how good the model is. lower the better.
@@ -192,6 +219,15 @@ class topics(HydraHeadApp):
                     # Compute Coherence Score - Higher the topic coherence, the topic is more human interpretable
                     coherence_model_lda = CoherenceModel(model=lda_model_results, texts=data_bigrams, dictionary=id2word, coherence='c_v')
                     coherence_lda = coherence_model_lda.get_coherence()
-                    st.markdown('{} topics - {} (lower is better) / {} (higher is better)'.format(num_topics, perplexity, coherence_lda))
+                    coherence_df = coherence_df.append({'Number of topics':num_topics, 'Perplexity':perplexity, 'Coherence':coherence_lda}, ignore_index=True)
+                    #st.markdown('{} topics - {} (lower is better) / {} (higher is better)'.format(num_topics, perplexity, coherence_lda))
 
-        placeholder.empty()
+
+                coh_cols = st.columns([3,1])
+                with coh_cols[0]:
+                    st.plotly_chart(plot_coherence(coherence_df))
+                with coh_cols[1]:
+                    st.dataframe(coherence_df)
+
+
+        topic_placeholder.empty()

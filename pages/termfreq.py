@@ -3,6 +3,7 @@ import pandas as pd
 import numpy as np
 from natsort import natsorted
 from hydralit import HydraHeadApp
+import hydralit_components as hc
 from scripts import tfproc
 import textblob
 import subprocess
@@ -19,6 +20,12 @@ class termfreq(HydraHeadApp):
 
         tb_corpora()
 
+        # get source data
+        df_filtered = st.session_state.df_filtered
+
+        # placeholder for status updates
+        placeholder = st.empty()
+
         def tf_form(tf):
 
             n = int(tf['name'][-1])
@@ -26,25 +33,26 @@ class termfreq(HydraHeadApp):
             with st.form(key=f'tf{n}_form'):
 
                 tf['kwd'] = st.selectbox('Terms used vs. AI generated keywords vs. TF-IDF',['Terms','Keywords','TF-IDF'], key=f'tf{n}kwd', index=0)
-                tf['month'] = st.selectbox('Month',['All months in range'] + natsorted(list(df_filtered.month.unique())),key=f'tfmo{n}', index=1)
-                tf['source'] = st.selectbox('Source',['All sources in range'] + list(df_filtered.source.unique()),key=f'tfs{n}', index=1)
+                #tf['month'] = st.selectbox('Month',['All months in range'] + natsorted(list(df_filtered.month.unique())),key=f'tfmo{n}', index=1)
+                #tf['source'] = st.selectbox('Source',['All sources in range'] + list(df_filtered.source.unique()),key=f'tfs{n}', index=1)
+                months = [d for d in natsorted(df_filtered['month'].unique().tolist()) if d not in ['',None]]
+                tf['month_start'],tf['month_end'] = st.select_slider('Date range',
+                     options=months, value=(months[0],months[-1]), key=f'tfd{n}')
+                sources = list(df_filtered.source.unique())
+                tf['source'] = st.multiselect('Source',sources,key=f'tfs{n}',default=sources[0])
                 tf['ngram'] = st.selectbox('Ngrams',[1,2,3],key=f'tfng{n}', index=n-1)
                 tf['omit'] = st.text_input('Terms to omit from the results (separated by a comma)',key=f'tfmin{n}')
 
                 tf_submit_button = st.form_submit_button(label='Update search')
 
-                if 'All' in tf['month']:
-                    tf['month'] = '.*'
-                if 'All' in tf['source']:
-                    tf['source'] = '.*'
+                # if 'All' in tf['month']:
+                #     tf['month'] = '.*'
+                # if 'All' in tf['source']:
+                #     tf['source'] = '.*'
 
                 return tf, tf_submit_button
 
-        # get source data
-        df_filtered = st.session_state.df_filtered
 
-        # placeholder for status updates
-        placeholder = st.empty()
 
         # header
         st.subheader('Term frequency')
@@ -92,6 +100,7 @@ class termfreq(HydraHeadApp):
                 elif tf1['kwd'] == 'Keywords':
                     t1_df, tf1 = tfproc.get_rake(df_filtered, tf1)
 
+                st.markdown(tfproc.results_title(tf1))
                 st.table(t1_df)
 
                 # wordcloud
@@ -123,6 +132,8 @@ class termfreq(HydraHeadApp):
                 elif tf2['kwd'] == 'Keywords':
                     t2_df, tf2 = tfproc.get_rake(df_filtered, tf2)
 
+
+                st.markdown(tfproc.results_title(tf2))
                 st.table(t2_df)
 
                 # wordcloud

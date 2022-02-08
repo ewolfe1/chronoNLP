@@ -43,7 +43,7 @@ class technical(HydraHeadApp):
                             name='New daily COVID-19 cases reported', mode='lines',marker_color='indianred', line_shape='spline',line_smoothing=.2),
                             secondary_y=True
                     )
-            fig.update_yaxes(title_text="New daily COVID cases", secondary_y=True)
+            fig.update_yaxes(title_text="New daily COVID cases", secondary_y=True, showgrid=False)
 
             # cumulative case - not yet working
             # fig.update_yaxes(title_text="New COVID-19 cases", secondary_y=True, showgrid=False)

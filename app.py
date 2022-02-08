@@ -1,17 +1,17 @@
 from hydralit import HydraApp
-# import hydralit_components as hc
+import hydralit_components as hc
 import streamlit as st
-st.set_page_config(page_title='News Article Explorer', page_icon=':newspaper:', layout='wide',initial_sidebar_state='collapsed')
+st.set_page_config(page_title='News Article Explorer', page_icon=':newspaper:', layout='wide') #,initial_sidebar_state='collapsed')
 from datetime import datetime
 from natsort import natsorted
 
 # Custom imports
-from scripts import getdata
+from scripts import getdata, loader
 from pages import home, technical, sentiment, termfreq, topics, search
 
 
 # hack for styling - may be deprecated in future
-st.write("""<style>
+st.write("""<style>s
             div.stSlider{padding:0 2em 0 2em}
             img{max-width:75%;margin: auto}
             div.streamlit-expanderHeader{background-color:#8A93DE; color:#ffffff}
@@ -27,17 +27,16 @@ def get_date_range(start_date, end_date, df):
 
     return start_date, end_date, df_filtered
 
-
 # start app
 over_theme = {'txc_inactive': '#ffffff','menu_background':'#8A93DE'}
 app = HydraApp(
     title='Exploring newspaper data',
     favicon=':newspaper:',
+    hide_streamlit_markers=False,
     use_navbar=True,
     navbar_sticky=True,
-    hide_streamlit_markers=False,
     navbar_animation=False,
-    navbar_theme=over_theme
+    navbar_theme=over_theme,
 )
 
 # Add all your application here
@@ -48,7 +47,8 @@ app.add_app("Sentiment analysis", sentiment.sentiment())
 app.add_app("Term frequency", termfreq.termfreq())
 app.add_app("Topic modeling", topics.topics())
 
-#app.add_loader_app(None)
+# override default loader
+app.add_loader_app(loader.MyLoadingApp(delay=0))
 
 # set input data files
 current_csv = 'data/current_articles.csv'
@@ -76,6 +76,15 @@ placeholder.empty()
 
 # date selector
 with st.sidebar:
+
+    # intital values
+    # try:
+    #     st.markdown(st.session_state.data_summ)
+    # except AttributeError:
+    #     s_date = datetime.strftime(datetime.strptime(df.date.min(), "%Y-%m-%d"), "%B %-d, %Y")
+    #     e_date = datetime.strftime(datetime.strptime(df.date.max(), "%Y-%m-%d"), "%B %-d, %Y")
+    #     st.markdown(f'Reviewing data for **{len(df):,} articles** from **{len(df.source.unique())} sources** ({s_date} - {e_date})')
+
     start_date, end_date = st.select_slider('Select a custom date range',
          options=months, value=(months[0],months[-1]), key='date_home')
     df_filtered = df[(df['month'] >= start_date) & (df['month'] <= end_date)]
@@ -87,8 +96,11 @@ with st.sidebar:
     s_date = datetime.strftime(datetime.strptime(df_filtered.date.min(), "%Y-%m-%d"), "%B %-d, %Y")
     e_date = datetime.strftime(datetime.strptime(df_filtered.date.max(), "%Y-%m-%d"), "%B %-d, %Y")
 
+    sources = list(df_filtered.source.unique())
+    st.multiselect('Select source(s) to review (default is all sources)',sources,key='sources_home')
 
-st.markdown(f'Reviewing data for **{len(df_filtered):,} articles** from **{len(df_filtered.source.unique())} sources** ({s_date} - {e_date})')
+    data_summ = f'Reviewing data for **{len(df_filtered):,} articles** from **{len(df_filtered.source.unique())} sources** ({s_date} - {e_date})'
+    st.markdown(data_summ)
 
 st.session_state.start_date = start_date
 st.session_state.s_date = s_date
@@ -99,6 +111,7 @@ st.session_state.df_filtered = df_filtered
 st.session_state.date_df = date_df
 st.session_state.months = months
 st.session_state.case_csv = case_csv
+# st.session_state.data_summ = data_summ
 
 placeholder.empty()
 
