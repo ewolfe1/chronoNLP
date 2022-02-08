@@ -5,6 +5,7 @@ class home(HydraHeadApp):
 
     def run(self):
 
+        x = 'x'
         # # Below is a framework for allowing user uploads of different datasets
         # # It is incomplete, and not yet implemented
         # data_select_btn = st.radio('TEST', ['Use existing dataset','Upload a different dataset'])
