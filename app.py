@@ -48,7 +48,7 @@ app.add_app("Term frequency", termfreq.termfreq())
 app.add_app("Topic modeling", topics.topics())
 
 # override default loader
-app.add_loader_app(loader.MyLoadingApp(delay=0))
+# app.add_loader_app(loader.MyLoadingApp(delay=0))
 
 # set input data files
 current_csv = 'data/current_articles.csv'
@@ -115,9 +115,5 @@ st.session_state.case_csv = case_csv
 
 placeholder.empty()
 
-st.write('1')
-
 # The main app
 app.run()
-
-st.write('2')
