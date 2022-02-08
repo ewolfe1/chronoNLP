@@ -36,7 +36,7 @@ app = HydraApp(
     use_navbar=True,
     navbar_sticky=True,
     navbar_animation=False,
-    navbar_theme=over_theme,
+    navbar_theme=over_theme
 )
 
 # Add all your application here
@@ -47,8 +47,10 @@ app.add_app("Sentiment analysis", sentiment.sentiment())
 app.add_app("Term frequency", termfreq.termfreq())
 app.add_app("Topic modeling", topics.topics())
 
+app.run()
+
 # override default loader
-# app.add_loader_app(loader.MyLoadingApp(delay=0))
+app.add_loader_app(loader.MyLoadingApp(delay=0))
 
 # set input data files
 current_csv = 'data/current_articles.csv'
