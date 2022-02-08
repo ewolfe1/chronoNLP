@@ -118,4 +118,4 @@ st.session_state.case_csv = case_csv
 placeholder.empty()
 
 # The main app
-app.run()
+# app.run()
