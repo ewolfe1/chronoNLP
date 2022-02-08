@@ -115,5 +115,9 @@ st.session_state.case_csv = case_csv
 
 placeholder.empty()
 
+st.write('1')
+
 # The main app
 app.run()
+
+st.write('2')
