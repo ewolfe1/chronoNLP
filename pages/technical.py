@@ -14,7 +14,6 @@ from scripts import getdata
 from hydralit import HydraHeadApp
 
 class technical(HydraHeadApp):
-#def app():
 
     def run(self):
 
