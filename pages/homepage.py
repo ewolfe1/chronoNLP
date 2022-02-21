@@ -2,7 +2,7 @@ import streamlit as st
 from hydralit import HydraHeadApp
 from scripts import getdata
 
-class home(HydraHeadApp):
+class homepage(HydraHeadApp):
 
     def run(self):
 
