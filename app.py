@@ -40,7 +40,7 @@ app = HydraApp(
 )
 
 # Add all your application here
-app.add_app("Home", home.homepage())
+app.add_app("Home", home.display())
 app.add_app("Technical analysis", technical.technical())
 app.add_app("Search", search.search())
 app.add_app("Sentiment analysis", sentiment.sentiment())
