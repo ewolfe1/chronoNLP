@@ -7,7 +7,7 @@ from natsort import natsorted
 
 # Custom imports
 from scripts import getdata, loader
-from pages import home, technical, sentiment, termfreq, topics, search
+from pages import home, technical, sentiment, termfreq, topics, search, upload
 
 
 # hack for styling - may be deprecated in future
@@ -22,8 +22,8 @@ st.write("""<style>s
 
 def get_date_range(start_date, end_date, df):
     start_date, end_date = st.select_slider('',
-         options=months, value=(months[0],months[-1]), key='date_init')
-    df_filtered = df[(df['month'] >= start_date) & (df['month'] <= end_date)]
+         options=daterange, value=(daterange[0],daterange[-1]), key='date_init')
+    df_filtered = df[(df['cleandate'] >= start_date) & (df['cleandate'] <= end_date)]
 
     return start_date, end_date, df_filtered
 
@@ -46,8 +46,7 @@ app.add_app("Search", search.search())
 app.add_app("Sentiment analysis", sentiment.sentiment())
 app.add_app("Term frequency", termfreq.termfreq())
 app.add_app("Topic modeling", topics.topics())
-
-app.run()
+app.add_app("Upload data", upload.upload())
 
 # override default loader
 app.add_loader_app(loader.MyLoadingApp(delay=0))
@@ -63,7 +62,7 @@ placeholder.markdown('*. . . Initializing . . .*\n\n')
 
 # configure data range and filter data
 df = getdata.get_data(current_csv, tk_js)
-df, months = getdata.get_months(df)
+df, daterange = getdata.get_daterange(df)
 
 placeholder.markdown('*. . . Pre-processing data . . .*\n\n')
 
@@ -72,31 +71,33 @@ placeholder.markdown('*. . . Pre-processing data . . .*\n\n')
 # df = getdata.preprocess(df)
 
 # sentiment analysis - ~ 30 seconds for 3,500 articles
-df = getdata.get_sa(df, placeholder)
+df = getdata.get_sa(df)
+
+if 'userdata' not in st.session_state:
+
+    st.session_state.df = df
+    st.session_state.daterange = daterange
 
 placeholder.empty()
 
 # date selector
 with st.sidebar:
 
-    # intital values
-    # try:
-    #     st.markdown(st.session_state.data_summ)
-    # except AttributeError:
-    #     s_date = datetime.strftime(datetime.strptime(df.date.min(), "%Y-%m-%d"), "%B %-d, %Y")
-    #     e_date = datetime.strftime(datetime.strptime(df.date.max(), "%Y-%m-%d"), "%B %-d, %Y")
-    #     st.markdown(f'Reviewing data for **{len(df):,} articles** from **{len(df.source.unique())} sources** ({s_date} - {e_date})')
+    df = st.session_state.df
+    daterange = st.session_state.daterange
 
     start_date, end_date = st.select_slider('Select a custom date range',
-         options=months, value=(months[0],months[-1]), key='date_home')
-    df_filtered = df[(df['month'] >= start_date) & (df['month'] <= end_date)]
+         options=daterange, value=(daterange[0],daterange[-1]), key='date_home')
+    df_filtered = df[(df['cleandate'] >= start_date) & (df['cleandate'] <= end_date)]
     df_filtered.reset_index(inplace=True)
     date_df = getdata.get_date_df(df_filtered)
-    months = getdata.get_months(df_filtered)
-    # s_date = datetime.strftime(datetime.strptime(start_date, "%Y-%m"), "%B %Y")
-    # e_date = datetime.strftime(datetime.strptime(end_date, "%Y-%m"), "%B %Y")
-    s_date = datetime.strftime(datetime.strptime(df_filtered.date.min(), "%Y-%m-%d"), "%B %-d, %Y")
-    e_date = datetime.strftime(datetime.strptime(df_filtered.date.max(), "%Y-%m-%d"), "%B %-d, %Y")
+    st.session_state.daterange = getdata.get_daterange(df_filtered)
+    try:
+        s_date = datetime.strftime(datetime.strptime(df_filtered.date.min(), "%Y-%m-%d"), "%B %-d, %Y")
+        e_date = datetime.strftime(datetime.strptime(df_filtered.date.max(), "%Y-%m-%d"), "%B %-d, %Y")
+    except:
+        s_date = df_filtered.date.min()
+        e_date = df_filtered.date.max()
 
     sources = list(df_filtered.source.unique())
     st.multiselect('Select source(s) to review (default is all sources)',sources,key='sources_home')
@@ -108,14 +109,13 @@ st.session_state.start_date = start_date
 st.session_state.s_date = s_date
 st.session_state.end_date = end_date
 st.session_state.e_date = e_date
-st.session_state.df = df
 st.session_state.df_filtered = df_filtered
 st.session_state.date_df = date_df
-st.session_state.months = months
+st.session_state.daterange = daterange
 st.session_state.case_csv = case_csv
 # st.session_state.data_summ = data_summ
 
 placeholder.empty()
 
 # The main app
-# app.run()
+app.run()
