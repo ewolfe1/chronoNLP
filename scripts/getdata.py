@@ -7,10 +7,7 @@ import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
 import textdescriptives as td
 import nltk
-nltk.download('vader_lexicon')
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-analyzer = SentimentIntensityAnalyzer()
-
 import json
 from tensorflow.keras.preprocessing.text import Tokenizer, tokenizer_from_json
 from ast import literal_eval
@@ -22,6 +19,8 @@ def load_model():
     nlp.add_pipe('textdescriptives')
 
     return nlp
+
+nlp = load_model()
 
 @st.experimental_memo
 def get_date_df(df):
@@ -41,8 +40,6 @@ def get_daterange(df):
 
 @st.experimental_memo(suppress_st_warning=True)
 def preprocess(df, _nlp_placeholder):
-
-    nlp = load_model()
 
     # placeholder columns
     for c in ['clean_text','lemmas','grade_level','readability']:
@@ -82,6 +79,9 @@ def preprocess(df, _nlp_placeholder):
 
 @st.experimental_memo
 def get_sa(df):
+
+    nltk.download('vader_lexicon')
+    analyzer = SentimentIntensityAnalyzer()
 
     # compound is average; other measures are neg, neu, pos
     df['compound'] = df['full_text'].apply(lambda x: analyzer.polarity_scores(x)['compound'])
