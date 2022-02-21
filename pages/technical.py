@@ -36,20 +36,15 @@ class technical(HydraHeadApp):
             fig.update_yaxes(title_text="Articles", secondary_y=False, showgrid=False)
 
             # include cases as line graph
-            cv_data = getdata.get_case_data(st.session_state.case_csv)
+            if 'userdata' not in st.session_state:
+                cv_data = getdata.get_case_data(st.session_state.case_csv)
 
-            # cases
-            fig.add_trace(go.Scatter(x=[datetime.strftime(n,'%b %Y') for n,g in cv_data], y=[g.newcases.mean() for n,g in cv_data],
-                            name='New daily COVID-19 cases reported', mode='lines',marker_color='indianred', line_shape='spline',line_smoothing=.2),
-                            secondary_y=True
-                    )
-            fig.update_yaxes(title_text="New daily COVID cases", secondary_y=True, showgrid=False)
-
-            # cumulative case - not yet working
-            # fig.update_yaxes(title_text="New COVID-19 cases", secondary_y=True, showgrid=False)
-            # fig.add_trace(go.Scatter(x=[datetime.strftime(n,'%b %Y') for n,g in cv_data], y=[g.cases.mean() for n,g in cv_data],
-            #                 name='Total COVID-19 cases reported', mode='lines', line_shape='spline',line_smoothing=.2
-            #         ))
+                # cases
+                fig.add_trace(go.Scatter(x=[datetime.strftime(n,'%b %Y') for n,g in cv_data], y=[g.newcases.mean() for n,g in cv_data],
+                                name='New daily COVID-19 cases reported', mode='lines',marker_color='indianred', line_shape='spline',line_smoothing=.2),
+                                secondary_y=True
+                        )
+                fig.update_yaxes(title_text="New daily COVID cases", secondary_y=True, showgrid=False)
 
             return fig
 
@@ -95,6 +90,6 @@ class technical(HydraHeadApp):
         placeholder.markdown('*. . . Analyzing publication data . . .*\n\n')
 
         st.plotly_chart(articles_by_pub(date_df), use_container_width=True)
-        st.dataframe(get_tech_details(df_filtered))
+        st.table(get_tech_details(df_filtered))
 
         placeholder.empty()

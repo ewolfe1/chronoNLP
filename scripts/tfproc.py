@@ -37,7 +37,7 @@ def get_wc(tf):
     wc = plt.imshow(wordcloud, interpolation='bilinear')
     plt.axis("off")
 
-    month = f'{st.session_state.s_date}-{st.session_state.e_date}' if tf['month'] == '.*' else datetime.strftime(datetime.strptime(tf['month'], "%Y-%m"), "%B %Y")
+    month = f'{st.session_state.s_date}-{st.session_state.e_date}' if tf['date'] == '.*' else datetime.strftime(datetime.strptime(tf['date'], "%Y-%m"), "%B %Y")
     source = 'All sources' if tf['source'] == '.*' else tf['source']
 
     #plt.title('{} -- {} ({} articles)'.format(month, source, tf['num']))
@@ -46,15 +46,15 @@ def get_wc(tf):
 
 def results_title(tf):
 
-    ms = datetime.strftime(datetime.strptime(tf["month_start"],'%Y-%m'),'%B %Y')
-    me = datetime.strftime(datetime.strptime(tf["month_end"],'%Y-%m'),'%B %Y')
+    ms = datetime.strftime(datetime.strptime(tf["date_start"],'%Y-%m'),'%B %Y')
+    me = datetime.strftime(datetime.strptime(tf["date_end"],'%Y-%m'),'%B %Y')
 
     kwd_label = {'Terms':'Most frequent terms',
                 'TF-IDF':'TF-IDF results',
                 'Keywords':'RAKE keywords'}
 
-    month = f"{ms} to {me}" if ms != me else ms
-    title = f"{kwd_label.get(tf['kwd'])} from {month} --- {'/'.join(tf['source'])} ({tf['num']} articles)"
+    dates = f"{ms} to {me}" if ms != me else ms
+    title = f"{kwd_label.get(tf['kwd'])} from {dates} --- {'/'.join(tf['source'])} ({tf['num']} articles)"
 
     return title
 
@@ -62,7 +62,7 @@ def results_title(tf):
 def filter_df(df, tf):
 
     df_filtered = df
-    class_df = df[((df['month'] >= tf['month_start']) & (df['month'] <= tf['month_end'])) & (df.source.str.contains('|'.join(tf['source'])))].copy()
+    class_df = df[((df['cleandate'] >= tf['date_start']) & (df['cleandate'] <= tf['date_end'])) & (df.source.str.contains('|'.join(tf['source'])))].copy()
     tf['num'] = len(class_df)
 
     try:

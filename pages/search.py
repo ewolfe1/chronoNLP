@@ -37,7 +37,7 @@ class search(HydraHeadApp):
 
             for source in date_df.source.unique():
 
-                d_df = date_df[date_df.source==source].groupby('month')
+                d_df = date_df[date_df.source==source].groupby('cleandate')
                 kwsearch = [' '.join(g.lemmas).split().count(term) for n,g in d_df]
                 kwcount = "{:,d}".format(sum(kwsearch))
 
@@ -63,7 +63,7 @@ class search(HydraHeadApp):
 
                 term = [w.lemma_ for w in nlp(term.strip())][0]
 
-                d_df = date_df.groupby('month')
+                d_df = date_df.groupby('cleandate')
                 kwsearch = [' '.join(g.lemmas).split().count(term) for n,g in d_df]
                 total_uses = ' '.join(date_df.lemmas).split().count(term)
 

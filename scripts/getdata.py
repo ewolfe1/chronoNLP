@@ -18,11 +18,10 @@ from ast import literal_eval
 @st.experimental_memo
 def load_model():
     nlp = spacy.load("en_core_web_sm")
-    nlp.add_pipe('textdescriptives')
     nlp.Defaults.stop_words |= {'the','we','she','he','said','it','like'}
+    nlp.add_pipe('textdescriptives')
 
-nlp = load_model()
-
+    return nlp
 
 @st.experimental_memo
 def get_date_df(df):
@@ -33,37 +32,59 @@ def get_date_df(df):
     return date_df
 
 @st.experimental_memo
-def get_months(df):
-    # get a list of months represented in the data
-    df['month'] = df['date'].apply(lambda x: x[:7])
-    months = [d for d in natsorted(df['month'].unique().tolist()) if d not in ['',None]]
-    return df, months
+def get_daterange(df):
+    # get a list of dates represented in the data
+    df['cleandate'] = df['date'].apply(lambda x: x[:7] if len(x) >= 7 else x[:4])
+    daterange = [d for d in natsorted(df['cleandate'].unique().tolist()) if d not in ['',None]]
 
-@st.experimental_memo
-def preprocess(df):
+    return df, daterange
+
+@st.experimental_memo(suppress_st_warning=True)
+def preprocess(df, _nlp_placeholder):
+
+    nlp = load_model()
+
+    # placeholder columns
+    for c in ['clean_text','lemmas','grade_level','readability']:
+        if c not in df.columns:
+            df[c] = None
+
+    # processing count
+    ct = 1
+    _nlp_placeholder = st.empty()
 
     for i,r in df.iterrows():
+
+        _nlp_placeholder.markdown(f'Processing item {ct} of {len(df)}')
 
         # call spaCy for cleanup and lemmas - better than textblob's method
         doc = nlp(r['full_text'])
 
         df.at[i,'clean_text'] =  ' '.join(' '.join(
-                [w.text.lower() for w in doc if w.text not in STOP_WORDS and not w.is_punct]).split())
-        df.at[i,'lemmas'] = ' '.join([w.lemma_.lower() for w in doc])
+                [w.text.lower() for w in doc if w.text.lower() not in STOP_WORDS and
+                 not w.is_punct and not w.is_digit and not w.is_space]).split())
+
+        df.at[i,'clean_text'] =  ' '.join(' '.join(
+                [w.text.lower() for w in doc if w.text.lower() not in STOP_WORDS and \
+                 not w.is_punct and not w.is_digit and not w.is_space]).split())
+        df.at[i,'lemmas'] = ' '.join([w.lemma_.lower() for w in doc \
+                if not w.is_punct and not w.is_digit and not w.is_space])
 
         # textdescriptives to get readability score
         df.at[i,'grade_level'] = doc._.readability['automated_readability_index']
         df.at[i,'readability'] = doc._.readability['flesch_reading_ease']
 
+        ct += 1
+
+    _nlp_placeholder.markdown('*Text cleaning and lemmatization complete*')
+
     return df
 
 @st.experimental_memo
-def get_sa(df, _placeholder):
+def get_sa(df):
 
     # compound is average; other measures are neg, neu, pos
-    _placeholder.markdown('*. . . Pre-processing data (Step 1 of 2). . .*\n\n')
     df['compound'] = df['full_text'].apply(lambda x: analyzer.polarity_scores(x)['compound'])
-    _placeholder.markdown('*. . . Pre-processing data (Step 2 of 2). . .*\n\n')
     df['title_compound'] = df['title'].apply(lambda x: analyzer.polarity_scores(x)['compound'])
 
     return df
@@ -108,3 +129,26 @@ def get_case_data(case_csv):
     cv_data = cv_data.resample('M')
 
     return cv_data
+
+def display_df(df):
+    # display truncated dataset
+    t_df = df[['url','date','title','full_text','source']].sort_values(by='date').sample(5).copy().assign(hack='').set_index('hack')
+    for c in['url','full_text','title']:
+        t_df[c] = t_df[c].apply(lambda x: x[:100] + '...')
+
+    st.table(t_df)
+
+def user_upload(uploaded_file):
+
+    if uploaded_file.name.split('.')[-1] == 'csv':
+        df = pd.read_csv(uploaded_file)
+        df = df[~df.full_text.isnull()]
+        return df.sample(300)
+    elif uploaded_file.name.split('.')[-1] in ['xls','xlsx']:
+        df = df[~df.full_text.isnull()]
+        df = pd.read_excel(uploaded_file)
+        return df
+    else:
+        st.markdown(f"You uploaded {uploaded_file.name}")
+        st.markdown("Please upload in CSV, XLS, or XLSX format")
+        return None

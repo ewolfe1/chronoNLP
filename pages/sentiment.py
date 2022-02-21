@@ -54,32 +54,31 @@ class sentiment(HydraHeadApp):
 
         # sect 3
         placeholder.markdown('*. . . Evaluating article sentiment . . .*\n\n')
-        with st.expander("Top articles by sentiment"):
 
-            st.caption("View articles by VADER sentiment analysis score. Scale: 1.0 is most positive, -1.0 is most negative.")
-            sa_btn = st.radio('', ['Positive','Negative'])
-
-            if sa_btn == 'Positive':
-                st.markdown(f'10 articles with most positive sentiment analysis scores')
-                sa_df = get_sa_markdown(False)
-            else:
-                st.markdown(f'10 articles with most negative sentiment analysis scores')
-                sa_df = get_sa_markdown(True)
-
-            sa_head = st.columns([1,3,1,1])
-            sa_head[0].markdown('**Source**')
-            sa_head[1].markdown('**Article**')
-            sa_head[2].markdown('**Published date**')
-            sa_head[3].markdown('**VADER score**')
-
-            for i,r in sa_df.iterrows():
-                sa_cols = st.columns([1,3,1,1])
-                sa_cols[0].markdown(f'{r.source}')
-                sa_cols[1].markdown(f'[{r.title}]({r.url})')
-                sa_cols[2].markdown(f'{r.date}')
-                sa_cols[3].markdown(f'{r.compound}')
-
-            #for i,r in sa_df.iterrows():
-                #st.markdown(f'{r.source} - [{r.title}]({r.url}) ({r.date})')
+        # # articles by sentiment
+        # with st.expander("Top articles by sentiment"):
+        #
+        #     st.caption("View articles by VADER sentiment analysis score. Scale: 1.0 is most positive, -1.0 is most negative.")
+        #     sa_btn = st.radio('', ['Positive','Negative'])
+        #
+        #     if sa_btn == 'Positive':
+        #         st.markdown(f'10 articles with most positive sentiment analysis scores')
+        #         sa_df = get_sa_markdown(False)
+        #     else:
+        #         st.markdown(f'10 articles with most negative sentiment analysis scores')
+        #         sa_df = get_sa_markdown(True)
+        #
+        #     sa_head = st.columns([1,3,1,1])
+        #     sa_head[0].markdown('**Source**')
+        #     sa_head[1].markdown('**Article**')
+        #     sa_head[2].markdown('**Published date**')
+        #     sa_head[3].markdown('**VADER score**')
+        #
+        #     for i,r in sa_df.iterrows():
+        #         sa_cols = st.columns([1,3,1,1])
+        #         sa_cols[0].markdown(f'{r.source}')
+        #         sa_cols[1].markdown(f'[{r.title}]({r.url})')
+        #         sa_cols[2].markdown(f'{r.date}')
+        #         sa_cols[3].markdown(f'{r.compound}')
 
         placeholder.empty()

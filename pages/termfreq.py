@@ -33,11 +33,11 @@ class termfreq(HydraHeadApp):
             with st.form(key=f'tf{n}_form'):
 
                 tf['kwd'] = st.selectbox('Terms used vs. AI generated keywords vs. TF-IDF',['Terms','Keywords','TF-IDF'], key=f'tf{n}kwd', index=0)
-                #tf['month'] = st.selectbox('Month',['All months in range'] + natsorted(list(df_filtered.month.unique())),key=f'tfmo{n}', index=1)
+                #tf['month'] = st.selectbox('Month',['All daterange in range'] + natsorted(list(df_filtered.month.unique())),key=f'tfmo{n}', index=1)
                 #tf['source'] = st.selectbox('Source',['All sources in range'] + list(df_filtered.source.unique()),key=f'tfs{n}', index=1)
-                months = [d for d in natsorted(df_filtered['month'].unique().tolist()) if d not in ['',None]]
-                tf['month_start'],tf['month_end'] = st.select_slider('Date range',
-                     options=months, value=(months[0],months[-1]), key=f'tfd{n}')
+                daterange = [d for d in natsorted(df_filtered['cleandate'].unique().tolist()) if d not in ['',None]]
+                tf['date_start'],tf['date_end'] = st.select_slider('Date range',
+                     options=daterange, value=(daterange[0],daterange[-1]), key=f'tfd{n}')
                 sources = list(df_filtered.source.unique())
                 tf['source'] = st.multiselect('Source',sources,key=f'tfs{n}',default=sources[0])
                 tf['ngram'] = st.selectbox('Ngrams',[1,2,3],key=f'tfng{n}', index=n-1)
@@ -68,14 +68,14 @@ class termfreq(HydraHeadApp):
             st.session_state.tf_forms = [
             {   'name':'tf1',
                 'kwd':'Terms',
-                'month':natsorted(df_filtered.month.unique())[0],
+                'date':natsorted(df_filtered.cleandate.unique())[0],
                 'source':df_filtered.source.unique()[0],
                 'ngram':1,
                 'omit':''
             },
             {   'name':'tf2',
                 'kwd':'Terms',
-                'month':natsorted(df_filtered.month.unique())[0],
+                'date':natsorted(df_filtered.cleandate.unique())[0],
                 'source':df_filtered.source.unique()[0],
                 'ngram':2,
                 'omit':''

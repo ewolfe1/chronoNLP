@@ -10,7 +10,7 @@ colors = cl.to_rgb(cl.scales['7']['qual']['Set2'])
 def get_topic_plot(df, sent_query):
     fig = go.Figure()
 
-    d_df = df.groupby('month')
+    d_df = df.groupby('cleandate')
     sents = [g[sent_query].mean() for n,g in d_df]
 
     # sum of all sources
@@ -22,7 +22,7 @@ def get_topic_plot(df, sent_query):
     # individual sources
     for source in df.source.unique():
 
-        d_df = df[df.source==source].groupby('month')
+        d_df = df[df.source==source].groupby('cleandate')
         sents = [g[sent_query].mean() for n,g in d_df]
 
         fig.add_trace(go.Scatter(x=[n for n,g in d_df], y=sents,
@@ -60,7 +60,7 @@ def plot_sa_multiterm(df, searchterm_multi, sent_query):
         term = term.strip().lower()
         search_df = pd.DataFrame([r for i, r in df.iterrows() if term in r.clean_text + r.lemmas])
 
-        d_df = search_df.groupby('month')
+        d_df = search_df.groupby('cleandate')
         sents = [g[sent_query].mean() for n,g in d_df]
 
         # sum of all sources

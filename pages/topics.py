@@ -133,19 +133,19 @@ class topics(HydraHeadApp):
 
         placeholder.markdown('*. . . Initializing . . .*\n\n')
 
-        placeholder.markdown('*. . . Compiling data (step 1 of 4). . .*\n')
+        placeholder.markdown('*. . . Compiling data (step 1 of 4) . . .*\n')
         data_bigrams, id2word, corpus = get_ta_models(data)
 
-        placeholder.markdown('*. . . Building topic models for dataset  (step 2 of 4). . .*\n')
+        placeholder.markdown('*. . . Building topic models for dataset  (step 2 of 4) . . .*\n')
 
         if 'num_topics' not in st.session_state:
             st.session_state.num_topics = 12
         lda_model = get_lda_model(id2word, corpus, st.session_state.num_topics)
-        placeholder.markdown('*. . . Assigning articles to topics  (step 3 of 4). . .*\n')
+        placeholder.markdown('*. . . Assigning articles to topics  (step 3 of 4) . . .*\n')
         topic_df = get_topic_df(df_filtered, lda_model, corpus)
 
         # plot topic frequency over time
-        placeholder.markdown('*. . . Visualizing data (step 4 of 4). . .*\n')
+        placeholder.markdown('*. . . Visualizing data (step 4 of 4) . . .*\n')
 
         st.caption('Click an item in the legend to exclude from the results. Double click to isolate that item.')
         st.caption("'Absolute' will show the raw count of articles on that topic. 'Normalized' will show the relative proportion of that topic for a given month (scale is 0 to 1.0)")
@@ -169,8 +169,8 @@ class topics(HydraHeadApp):
                 with sa_cols[0]:
 
                     st.markdown(f'## Topic {i+1}')
-                    st.markdown(f'**Statistically present in** {num_all} articles')
-                    st.markdown(f'**Primary topic in** {num_top} articles')
+                    st.markdown(f'**Statistically present in** {num_all:,} articles')
+                    st.markdown(f'**Primary topic in** {num_top:,} articles')
 
                 with sa_cols[1]:
                     st.markdown(f'**Top keywords**')

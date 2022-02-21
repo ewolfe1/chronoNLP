@@ -1,26 +1,19 @@
 import streamlit as st
 from hydralit import HydraHeadApp
+from scripts import getdata
 
 class home(HydraHeadApp):
 
     def run(self):
 
-        def display_df(df):
-            # display truncated dataset
-            t_df = df[['url','date','title','full_text','source']].sort_values(by='date').sample(5).copy().assign(hack='').set_index('hack')
-            for c in['url','full_text','title']:
-                t_df[c] = t_df[c].apply(lambda x: x[:100] + '...')
-
-            st.table(t_df)
-
         # placeholder for status updates
         placeholder = st.empty()
         placeholder.markdown('*. . . Initializing . . .*\n\n')
 
-        st.markdown('Welcome to the newspaper analyzer.')
+        st.markdown('This site was built to facilitate exploration of the online text-based news coverage in Douglas County, Kansas of COVID-19. It can be used for text analysis and visualization of other textual datasets with a time-based component.')
         st.markdown('***Data sample***')
 
         # By default, show the current dataset as a truncated
-        display_df(st.session_state.df_filtered)
+        getdata.display_df(st.session_state.df_filtered)
 
         placeholder.empty()
