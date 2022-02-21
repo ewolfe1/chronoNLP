@@ -2,6 +2,7 @@ plotly==5.1.0
 streamlit
 streamlit-webrtc
 hydralit
+hydralit_components
 natsort==7.1.1
 colorlover==0.3.0
 spacy==3.2.1
