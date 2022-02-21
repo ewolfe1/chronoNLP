@@ -7,7 +7,7 @@ from natsort import natsorted
 
 # Custom imports
 from scripts import getdata, loader
-from pages import home, technical, sentiment, termfreq, topics, search, upload
+from pages import test, home, technical, sentiment, termfreq, topics, search, upload
 
 
 # hack for styling - may be deprecated in future
