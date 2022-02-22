@@ -7,7 +7,7 @@ from natsort import natsorted
 
 # Custom imports
 from scripts import getdata, loader
-from pages import homepage, technical, sentiment, termfreq, topics, search, upload
+from pages import test, technical, sentiment, termfreq, topics, search, upload
 
 
 # hack for styling - may be deprecated in future
@@ -40,7 +40,7 @@ app = HydraApp(
 )
 
 # Add all your application here
-app.add_app("Home", homepage.homepage())
+app.add_app("TESTHome", test.test())
 app.add_app("Technical analysis", technical.technical())
 app.add_app("Search", search.search())
 app.add_app("Sentiment analysis", sentiment.sentiment())
