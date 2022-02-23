@@ -32,9 +32,8 @@ class termfreq(HydraHeadApp):
             # form to allow user input
             with st.form(key=f'tf{n}_form'):
 
-                tf['kwd'] = st.selectbox('Terms used vs. AI generated keywords vs. TF-IDF',['Terms','Keywords','TF-IDF'], key=f'tf{n}kwd', index=0)
-                #tf['month'] = st.selectbox('Month',['All daterange in range'] + natsorted(list(df_filtered.month.unique())),key=f'tfmo{n}', index=1)
-                #tf['source'] = st.selectbox('Source',['All sources in range'] + list(df_filtered.source.unique()),key=f'tfs{n}', index=1)
+                tf['kwd'] = st.selectbox('Term frequency vs. TF-IDF rankings',['Terms','TF-IDF'], key=f'tf{n}kwd', index=0)
+                # Note: have omitted 'Keywords' from the above list due to excessive processing times
                 daterange = [d for d in natsorted(df_filtered['cleandate'].unique().tolist()) if d not in ['',None]]
                 tf['date_start'],tf['date_end'] = st.select_slider('Date range',
                      options=daterange, value=(daterange[0],daterange[-1]), key=f'tfd{n}')
@@ -44,11 +43,6 @@ class termfreq(HydraHeadApp):
                 tf['omit'] = st.text_input('Terms to omit from the results (separated by a comma)',key=f'tfmin{n}')
 
                 tf_submit_button = st.form_submit_button(label='Update search')
-
-                # if 'All' in tf['month']:
-                #     tf['month'] = '.*'
-                # if 'All' in tf['source']:
-                #     tf['source'] = '.*'
 
                 return tf, tf_submit_button
 
