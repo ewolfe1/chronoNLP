@@ -158,10 +158,10 @@ def user_upload(uploaded_file):
         df = df[~df.full_text.isnull()]
         return df
     elif uploaded_file.name.split('.')[-1] in ['js','json']:
-        df = pd.read_json(uploaded_file)
+        df = pd.read_json(uploaded_file, convert_dates=False)
         df = df[~df.full_text.isnull()]
-        return df
+        return df.sample(30)
     else:
         st.markdown(f"You uploaded {uploaded_file.name}")
-        st.markdown("Please upload in CSV, XLS, XLSX, or JSON format")
+        st.markdown("Please upload in tabular or JSON format (.csv, .xls, .xlsx, .js, .json)")
         return None
