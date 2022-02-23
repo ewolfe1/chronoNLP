@@ -31,7 +31,8 @@ class technical(HydraHeadApp):
 
             # Update layout
             fig.update_layout(barmode='stack', xaxis_tickangle=45,
-                              title='Number of monthly articles published relating to COVID-19 - {:,} total'.format(len(date_df)))
+                              title='Distribution of articles published over time'
+                              )
             fig.update_yaxes(title_text="Articles", secondary_y=False, showgrid=False)
 
             # include cases as line graph
@@ -87,6 +88,9 @@ class technical(HydraHeadApp):
 
         # articles by publication
         placeholder.markdown('*. . . Analyzing publication data . . .*\n\n')
+
+
+        st.markdown(f'The current dataset consists of {len(date_df):,} articles, published from {st.session_state.s_date} to {st.session_state.e_date}.')
 
         st.plotly_chart(articles_by_pub(date_df), use_container_width=True)
         st.table(get_tech_details(df_filtered))

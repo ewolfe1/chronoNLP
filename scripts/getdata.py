@@ -111,6 +111,7 @@ def get_data(current_csv, tk_js):
 
     return df
 
+@st.experimental_memo
 def get_case_data(case_csv):
 
     # 'https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-counties.csv'
@@ -130,11 +131,19 @@ def get_case_data(case_csv):
 
     return cv_data
 
-def display_df(df):
+def display_initial_df(df):
     # display truncated dataset
-    t_df = df[['url','date','title','full_text','source']].sort_values(by='date').sample(5).copy().assign(hack='').set_index('hack')
+    t_df = df[['url','date','title','full_text','source']].sort_values(by='date').sample().copy().assign(hack='').set_index('hack')
     for c in['url','full_text','title']:
         t_df[c] = t_df[c].apply(lambda x: x[:100] + '...')
+
+    st.table(t_df)
+
+def display_user_df(df):
+    # display truncated dataset
+    t_df = df.sample().copy().assign(hack='').set_index('hack')
+    for c in t_df.columns:
+        t_df[c] = t_df[c].apply(lambda x: x[:100] + '...' if len(str(x)) > 100 else x)
 
     st.table(t_df)
 
@@ -143,12 +152,16 @@ def user_upload(uploaded_file):
     if uploaded_file.name.split('.')[-1] == 'csv':
         df = pd.read_csv(uploaded_file)
         df = df[~df.full_text.isnull()]
-        return df.sample(300)
+        return df.sample(30)
     elif uploaded_file.name.split('.')[-1] in ['xls','xlsx']:
-        df = df[~df.full_text.isnull()]
         df = pd.read_excel(uploaded_file)
+        df = df[~df.full_text.isnull()]
+        return df
+    elif uploaded_file.name.split('.')[-1] in ['js','json']:
+        df = pd.read_json(uploaded_file)
+        df = df[~df.full_text.isnull()]
         return df
     else:
         st.markdown(f"You uploaded {uploaded_file.name}")
-        st.markdown("Please upload in CSV, XLS, or XLSX format")
+        st.markdown("Please upload in CSV, XLS, XLSX, or JSON format")
         return None

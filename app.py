@@ -11,8 +11,8 @@ from pages import homeapp, technical, sentiment, termfreq, topics, search, uploa
 
 
 # hack for styling - may be deprecated in future
-st.write("""<style>s
-            div.stSlider{padding:0 2em 0 2em}
+st.write("""<style>
+            div.stSlider{padding:1em 2em}
             img{max-width:75%;margin: auto}
             div.streamlit-expanderHeader{background-color:#8A93DE; color:#ffffff}
             div.row-widget.stRadio > div{flex-direction:row;justify-content: center} #center radio buttons
@@ -96,8 +96,12 @@ with st.sidebar:
         s_date = datetime.strftime(datetime.strptime(df_filtered.date.min(), "%Y-%m-%d"), "%B %-d, %Y")
         e_date = datetime.strftime(datetime.strptime(df_filtered.date.max(), "%Y-%m-%d"), "%B %-d, %Y")
     except:
-        s_date = df_filtered.date.min()
-        e_date = df_filtered.date.max()
+        try:
+            s_date = datetime.strftime(datetime.strptime(df_filtered.date.min(), "%Y-%m"), "%B %Y")
+            e_date = datetime.strftime(datetime.strptime(df_filtered.date.max(), "%Y-%m"), "%B % %Y")
+        except:
+            s_date = df_filtered.date.min()
+            e_date = df_filtered.date.max()
 
     sources = list(df_filtered.source.unique())
     st.multiselect('Select source(s) to review (default is all sources)',sources,key='sources_home')
