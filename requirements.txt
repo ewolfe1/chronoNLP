@@ -8,6 +8,7 @@ colorlover==0.3.0
 spacy==3.2.1
 https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.2.0/en_core_web_sm-3.2.0.tar.gz#egg=en_core_web_sm
 nltk==3.6.5
+spacytextblob
 wordcloud==1.8.1
 gensim==4.1.2
 textblob==0.15.3

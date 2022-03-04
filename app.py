@@ -1,5 +1,5 @@
 from hydralit import HydraApp
-import hydralit_components as hc
+# import hydralit_components as hc
 import streamlit as st
 st.set_page_config(page_title='News Article Explorer', page_icon=':newspaper:', layout='wide') #,initial_sidebar_state='collapsed')
 from datetime import datetime

@@ -5,6 +5,7 @@ from datetime import datetime
 import streamlit as st
 import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
+
 import textdescriptives as td
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
@@ -70,6 +71,9 @@ def preprocess(df, _nlp_placeholder):
         # textdescriptives to get readability score
         df.at[i,'grade_level'] = doc._.readability['automated_readability_index']
         df.at[i,'readability'] = doc._.readability['flesch_reading_ease']
+
+        # sentiment and Objectivity ratings from textblob
+
 
         ct += 1
 
@@ -152,7 +156,8 @@ def user_upload(uploaded_file):
     if uploaded_file.name.split('.')[-1] == 'csv':
         df = pd.read_csv(uploaded_file)
         df = df[~df.full_text.isnull()]
-        return df.sample(30)
+        # return df.sample(30)
+        return df
     elif uploaded_file.name.split('.')[-1] in ['xls','xlsx']:
         df = pd.read_excel(uploaded_file)
         df = df[~df.full_text.isnull()]
@@ -160,7 +165,8 @@ def user_upload(uploaded_file):
     elif uploaded_file.name.split('.')[-1] in ['js','json']:
         df = pd.read_json(uploaded_file, convert_dates=False)
         df = df[~df.full_text.isnull()]
-        return df.sample(30)
+        # return df.sample(30)
+        return df
     else:
         st.markdown(f"You uploaded {uploaded_file.name}")
         st.markdown("Please upload in tabular or JSON format (.csv, .xls, .xlsx, .js, .json)")
