@@ -1,5 +1,17 @@
 # Using virtual environment to create local Streamlit application
 
+## pyenv
+
+***https://realpython.com/intro-to-pyenv***
+
+$brew install pyenv  
+$brew install pyenv-virtualenv
+
+*Note that several of these libraries need Python 3.8 or earlier
+$pyenv virtualenv 3.8.13 pyenv
+
+
+
 ## Venv
 
 *This method is also easier to use with Streamlit Sharing, as not all libraries are available in conda*

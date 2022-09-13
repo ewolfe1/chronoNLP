@@ -1,5 +1,4 @@
 import streamlit as st
-#import streamlit.components.v1 as components
 import pandas as pd
 import numpy as np
 from datetime import datetime
@@ -11,88 +10,78 @@ from plotly.subplots import make_subplots
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from scripts import getdata
-from hydralit import HydraHeadApp
+getdata.page_config()
 
-class technical(HydraHeadApp):
+def articles_by_pub():
 
-    def run(self):
+    date_df = st.session_state.df_filtered
+    date_df = date_df.set_index('date')
 
-        def articles_by_pub(date_df):
+    # build plot with a secondary y axis
+    fig = make_subplots(specs=[[{"secondary_y": True}]])
 
-            # build plot with a secondary y axis
-            fig = make_subplots(specs=[[{"secondary_y": True}]])
+    for source in date_df.source.unique():
+        d_df = date_df[date_df.source==source].resample('M')
+        fig.add_trace(go.Bar(x=[datetime.strftime(n,'%b %Y') for n,g in d_df], y=d_df.count()['title'],
+                            name='{} - {:,} items'.format(source, d_df.count()['title'].sum()),
+                            marker_color=(colors[list(date_df.source.unique()).index(source)])
+            ))
 
-            for source in date_df.source.unique():
-                d_df = date_df[date_df.source==source].resample('M')
-                fig.add_trace(go.Bar(x=[datetime.strftime(n,'%b %Y') for n,g in d_df], y=d_df.count()['title'],
-                                    name='{} - {:,} articles'.format(source, d_df.count()['title'].sum()),
-                                    marker_color=(colors[list(date_df.source.unique()).index(source)])
-                    ))
+    # Update layout
+    fig.update_layout(barmode='stack', xaxis_tickangle=45,
+                      title='Distribution of items over time'
+                      )
+    fig.update_yaxes(title_text="Items", secondary_y=False, showgrid=False)
 
-            # Update layout
-            fig.update_layout(barmode='stack', xaxis_tickangle=45,
-                              title='Distribution of articles published over time'
-                              )
-            fig.update_yaxes(title_text="Articles", secondary_y=False, showgrid=False)
+    return fig
 
-            # include cases as line graph
-            if 'userdata' not in st.session_state:
-                cv_data = getdata.get_case_data(st.session_state.case_csv)
+def get_tech_details():
 
-                # cases
-                fig.add_trace(go.Scatter(x=[datetime.strftime(n,'%b %Y') for n,g in cv_data], y=[g.newcases.mean() for n,g in cv_data],
-                                name='New daily COVID-19 cases reported', mode='lines',marker_color='indianred', line_shape='spline',line_smoothing=.2),
-                                secondary_y=True
-                        )
-                fig.update_yaxes(title_text="New daily COVID cases", secondary_y=True, showgrid=False)
+    df = st.session_state.df_filtered
+    tech_df = pd.DataFrame()
 
-            return fig
+    for n,g in df.groupby('source'):
 
-        @st.experimental_memo
-        def get_tech_details(df):
-            tech_df = pd.DataFrame()
+        info = {}
+        rd = g['readability']
+        gl = g['grade_level']
 
-            for n,g in df.groupby('source'):
+        info['Publication'] = n
+        info['Readability score'] = f'{round(rd.mean(),2)} ({round(max(rd),2)} high, {round(min(rd),2)} low)'
+        info['Grade level'] = f'{round(gl.mean(),2)} ({round(max(gl),2)} high, {round(min(gl),2)} low)'
+        info['Number of items'] = str(len(g))
+        info['Average length'] = f"{int(len(' '.join(g['full_text']).split()) / len(g))} words"
+        # info['Earliest article'] = datetime.strftime(datetime.strptime(g.date.min(),"%Y-%m-%d"),'%B %-d, %Y')
+        info['Earliest'] = datetime.strftime(g.date.min(),'%Y-%m-%d')
+        info['Most recent'] = datetime.strftime(g.date.max(),'%Y-%m-%d')
+        # tech_df = tech_df.append(info, ignore_index=True)
+        tech_df = pd.concat([tech_df, pd.DataFrame([info])])
 
-                info = {}
-                rd = g['readability']
-                gl = g['grade_level']
+    tech_df['Number of items'] = tech_df['Number of items'].astype(int)
+    tech_df.sort_values(by=['Number of items'], ascending=False, inplace=True)
+    tech_df.set_index('Publication', inplace=True)
+    tech_df = tech_df.reindex(columns=['Number of items','Earliest','Most recent','Average length','Readability score','Grade level'])
+    return tech_df
 
-                info['Publication'] = n
-                info['Readability score'] = f'{round(rd.mean(),2)} ({round(max(rd),2)} high, {round(min(rd),2)} low)'
-                info['Grade level'] = f'{round(gl.mean(),2)} ({round(max(gl),2)} high, {round(min(gl),2)} low)'
-                info['Number of articles'] = str(len(g))
-                info['Average article length'] = f"{int(len(' '.join(g['full_text']).split()) / len(g))} words"
-                # info['Earliest article'] = datetime.strftime(datetime.strptime(g.date.min(),"%Y-%m-%d"),'%B %-d, %Y')
-                info['Earliest article'] = g.date.min()
-                info['Most recent article'] = g.date.max()
-                tech_df = tech_df.append(info, ignore_index=True)
+# load data
+if 'init' not in st.session_state:
+    getdata.init_data()
+df_filtered = st.session_state.df_filtered
 
-            tech_df['Number of articles'] = tech_df['Number of articles'].astype(int)
-            tech_df.sort_values(by=['Number of articles'], ascending=False, inplace=True)
-            tech_df.set_index('Publication', inplace=True)
-            tech_df = tech_df.reindex(columns=['Number of articles','Earliest article','Most recent article','Average article length','Readability score','Grade level'])
-            return tech_df
+# placeholder for status updates
+placeholder = st.empty()
 
-        df_filtered = st.session_state.df_filtered
-        date_df = st.session_state.date_df
+# get source data
+placeholder.markdown('*. . . Initializing . . .*\n\n')
 
-        # placeholder for status updates
-        placeholder = st.empty()
+# header
+st.subheader('Technical details')
+getdata.df_summary_header()
 
-        # get source data
-        placeholder.markdown('*. . . Initializing . . .*\n\n')
+# articles by publication
+placeholder.markdown('*. . . Analyzing publication data . . .*\n\n')
 
-        # header
-        st.subheader('Technical details')
+st.plotly_chart(articles_by_pub(), use_container_width=True)
+st.table(get_tech_details())
 
-        # articles by publication
-        placeholder.markdown('*. . . Analyzing publication data . . .*\n\n')
-
-
-        st.markdown(f'The current dataset consists of {len(date_df):,} articles, published from {st.session_state.s_date} to {st.session_state.e_date}.')
-
-        st.plotly_chart(articles_by_pub(date_df), use_container_width=True)
-        st.table(get_tech_details(df_filtered))
-
-        placeholder.empty()
+placeholder.empty()

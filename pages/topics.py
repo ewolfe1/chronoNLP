@@ -1,5 +1,5 @@
 import streamlit as st
-from streamlit import components
+# from streamlit import components
 import pandas as pd
 from datetime import datetime
 import plotly.graph_objs as go
@@ -11,223 +11,171 @@ colors = cl.to_rgb(cl.scales['7']['qual']['Set2'])
 import gensim
 import gensim.corpora as corpora
 from gensim.models import CoherenceModel
-from hydralit import HydraHeadApp
 
-class topics(HydraHeadApp):
-# def app():
+from scripts import getdata, topicproc
+getdata.page_config()
 
-    def run(self):
+# load data
+if 'init' not in st.session_state:
+    getdata.init_data()
 
-        @st.experimental_memo
-        def get_ta_models(data):
-            # Build the bigram model
-            bigram = gensim.models.Phrases(data, min_count=3, threshold=60) # higher threshold fewer phrases.
-            bigram_mod = gensim.models.phrases.Phraser(bigram)
+df_filtered = st.session_state.df_filtered
 
-            def make_bigrams(texts):
-                return [bigram_mod[doc] for doc in texts]
+# header
+st.subheader('Topic modeling')
+getdata.df_summary_header()
 
-            data_bigrams = make_bigrams([bigram_mod[doc] for doc in data])
-            # Create Dictionary
-            id2word = corpora.Dictionary(data_bigrams)
-            # Create Corpus
-            texts = data_bigrams
-            # Term Document Frequency
-            corpus = [id2word.doc2bow(text) for text in texts]
-            return data_bigrams, id2word, corpus
+st.write("""**Topic modeling** is an algorithmic process that evaluates a set of documents to computationally identify topics contained within. A set of keywords is generated for each topic, along with a probabilistic rate of occurrence for each keyword within that topic. Individual documents are assigned a relative proportion of each topic (to total 100%) based on the content. It is based on the assumptions that (a) a text (document) is composed of several topics, and (b) a topic is composed of a collection of words.
 
-        def get_lda_model(id2word, corpus, num_topics):
-            lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,id2word=id2word,
-                    num_topics=num_topics, random_state=100, update_every=1,
-                    chunksize=200, passes=2, alpha='auto', per_word_topics=True)
+A topic modeling algorithm is a mathematical/statistical model used to infer what are the topics that better represent the data. This site uses Latent Dirichlet Allocation (LDA), a method introduced in 2003 that is commonly used for NLP tasks.(Blei et al, 2003) LDA takes an unsupervised approach to generate a pre-selected number of topics and assign each document to one or more relevant topics.""")
 
-            return lda_model
 
-        #@st.experimental_memo
-        def get_topic_df(df_filtered, _lda_model, corpus):
-            # make df of top topics
-            topic_df = pd.DataFrame()
+# placeholder for status updates
+placeholder = st.empty()
 
-            for i,r in df_filtered.iterrows():
+placeholder.markdown('*. . . Initializing . . .*\n\n')
+# get source data
+data = [t.split() for t in df_filtered.clean_text.values.tolist()]
 
-                tops = _lda_model.get_document_topics(corpus[i])
-                td = {t[0]:t[1] for t in tops}
+placeholder.markdown('*. . . Compiling data . . .*\n')
+data_bigrams, id2word, corpus = topicproc.get_ta_models(data)
 
-                td['top_topic'] = [str(k) for k,v in td.items() if v == max([v for k,v in td.items()])][0]
-                td['docid'] = str(i)
-                td['date'] = r['date']
-                topic_df = topic_df.append(td, ignore_index=True)
+placeholder.empty()
 
-            return topic_df
+# evaluate topics
+with st.form(key='topic_selection'):
 
-        def get_wc(lda_model, i):
-            weighted = {kwd[0]:kwd[1] for kwd in lda_model.show_topic(i, topn=100)}
-            wordcloud = WordCloud(background_color="white", colormap='twilight').generate_from_frequencies(weighted)
+    st.markdown('## Set topic parameters')
 
-            wc = plt.imshow(wordcloud, interpolation='bilinear')
-            plt.axis("off")
-            plt.close()
-            return wc.figure
+    nt_cols = st.columns([1,2,2])
 
-        # distribution of topics over time
-        def topics_by_month(lda_model, topic_df, ta_abs_btn):
+    st.markdown('Select a number of topics to generate')
 
-            # build plot
-            fig = go.Figure()
-            t_df = pd.DataFrame()
-
-            for n,g in topic_df.groupby(topic_df.date.str[:7]):
-                data = {'month':n}
-                if ta_abs_btn == 'Absolute':
-                    for c in g[[c for c in g.columns if str(c).isdigit()]]:
-                        data[c] = g[c].agg(sum)
-                        sizemin=3
-                else:
-                    for c in g[[c for c in g.columns if str(c).isdigit()]]:
-                        data[c] = g[c].agg(sum) / len(g)
-                        sizemin=6
-                t_df = t_df.append(data, ignore_index=True)
-            t_df = t_df.sort_values('month')
-
-            for topic_num in t_df[[c for c in t_df.columns if str(c).isdigit()]]:
-                kwds = ', '.join([lda_model.id2word[t[0]] for t in lda_model.get_topic_terms(topic_num)])
-                fig.add_trace(go.Scatter(x=t_df.month.tolist(), y=t_df[topic_num],
-                        mode='markers',marker=dict(
-                                         size=t_df[topic_num],
-                                         sizemin=sizemin),
-                                         name=f'Topic {topic_num + 1} - {kwds}'))
-                fig.update_layout(legend=dict(yanchor="top", y=-0.1, xanchor="left", x=0, itemsizing='constant'))
-                fig.update_layout(height=700)
-
-            return fig
-
-        def plot_coherence(coherence_df):
-
-            coherence_df['Number of topics'] = coherence_df['Number of topics'].astype(int)
-            coherence_df.set_index('Number of topics', inplace=True)
-
-            fig = make_subplots(specs=[[{"secondary_y": True}]], x_title='Number of topics')
-
-            fig.add_trace(go.Scatter(x=coherence_df.index, y=coherence_df['Coherence'],
-                                    mode='lines'))
-            fig.update_yaxes(title_text="Coherence", secondary_y=False, showgrid=False)
-
-            fig.add_trace(go.Scatter(x=coherence_df.index, y=coherence_df['Perplexity'],
-                                    mode='lines'), secondary_y=True)
-            fig.update_yaxes(title_text="Perplexity", secondary_y=True, showgrid=False)
-
-            return fig
-
-        date_df = st.session_state.date_df
-        df_filtered = st.session_state.df_filtered
-
-        # get source data
-        data = [t.split() for t in df_filtered.clean_text.values.tolist()]
-
-        # placeholder for status updates
-        topic_placeholder = st.empty()
-        placeholder = st.empty()
-
-        # header
-        st.subheader('Topic modeling')
-
-        placeholder.markdown('*. . . Initializing . . .*\n\n')
-
-        placeholder.markdown('*. . . Compiling data (step 1 of 4) . . .*\n')
-        data_bigrams, id2word, corpus = get_ta_models(data)
-
-        placeholder.markdown('*. . . Building topic models for dataset  (step 2 of 4) . . .*\n')
-
+    with nt_cols[0]:
+        nt_range = list(range(5,16))
         if 'num_topics' not in st.session_state:
-            st.session_state.num_topics = 12
-        lda_model = get_lda_model(id2word, corpus, st.session_state.num_topics)
-        placeholder.markdown('*. . . Assigning articles to topics  (step 3 of 4) . . .*\n')
-        topic_df = get_topic_df(df_filtered, lda_model, corpus)
+            st.session_state.num_topics = 8
 
-        # plot topic frequency over time
-        placeholder.markdown('*. . . Visualizing data (step 4 of 4) . . .*\n')
+        nt_selected = st.session_state.num_topics
+        # num_topics_selected = int(st.selectbox('Number of topics to generate', range(5,16)))
+        # st.session_state.num_topics = int(st.selectbox('Number of topics to generate', range(5,16)))
+        st.session_state.num_topics = int(st.selectbox('Number of topics to generate', nt_range, index=nt_range.index(nt_selected)))
 
-        st.caption('Click an item in the legend to exclude from the results. Double click to isolate that item.')
+    with nt_cols[1]:
+
+        st.markdown('Select data display')
+        ta_abs_btn = st.radio('', ['Absolute','Normalized'])
         st.caption("'Absolute' will show the raw count of articles on that topic. 'Normalized' will show the relative proportion of that topic for a given month (scale is 0 to 1.0)")
 
-        ta_abs_btn = st.radio('', ['Absolute','Normalized'])
+    with nt_cols[2]:
 
-        st.plotly_chart(topics_by_month(lda_model, topic_df, ta_abs_btn),use_container_width=True, height=400)
+        st.markdown('Words to omit from the results')
+        omit_tm = st.text_input('Results a little messy? Enter specific terms to omit from the results. Separate multiple terms with a comma.')
 
-        # perform topic modeling and convert to df
-        with st.expander("Review topics"):
+    topic_btn = st.form_submit_button('Generate topic model')
 
-            for i in range(0,lda_model.num_topics):
-                num_top = len(topic_df[topic_df.top_topic==str(i)])
-                try:
-                    num_all = topic_df[i].count()
-                except:
-                    num_all = 0
+topic_placeholder = st.empty()
 
-                sa_cols = st.columns([2,2,3])
+if topic_btn:
 
-                with sa_cols[0]:
+    if omit_tm != '':
+        data = [[ct for ct in t.split() if ct not in [o.strip() for o in omit_tm.split(',')]] for t in df_filtered.clean_text.values.tolist()]
+        # data = [t.split() for t in df_filtered.clean_text.values.tolist()]
 
-                    st.markdown(f'## Topic {i+1}')
-                    st.markdown(f'**Statistically present in** {num_all:,} articles')
-                    st.markdown(f'**Primary topic in** {num_top:,} articles')
+        topic_placeholder.markdown('*. . . Compiling data . . .*\n')
+        data_bigrams, id2word, corpus = topicproc.get_ta_models(data)
 
-                with sa_cols[1]:
-                    st.markdown(f'**Top keywords**')
-                    st.markdown(f"{', '.join([lda_model.id2word[t[0]] for t in lda_model.get_topic_terms(i)])}")
+    topic_placeholder.markdown('*. . . Building topic models for dataset  (step 2 of 4) . . .*\n')
 
-                try:
+    lda_model = topicproc.get_lda_model(id2word, corpus, st.session_state.num_topics)
+    topic_placeholder.markdown('*. . . Assigning articles to topics  (step 3 of 4) . . .*\n')
+    topic_df = topicproc.get_topic_df(df_filtered, lda_model, corpus)
 
-                    # working code to add top five articles by topic
-                    # sa_cols[0].markdown(f"**Top articles for this topic**  ({topic_df[i].count()} articles total)")
-                    # topic_art = ""
-                    # for idx,r in topic_df.sort_values(by=[i], ascending=False)[:5].iterrows():
-                    #     topic_art = topic_art + f"""* [{tokenizer.sequences_to_texts([df_filtered.iloc[idx]['title']])[0]}]({df_filtered.iloc[idx]['url']})  ({df_filtered.iloc[idx]['source']}, {r.date})\n"""
-                    #sa_cols[0].markdown(topic_art)
+    # plot topic frequency over time
+    topic_placeholder.markdown('*. . . Visualizing data (step 4 of 4) . . .*\n')
 
-                    wc = get_wc(lda_model, i)
-                except:
-                    st.markdown(f'Topic {i+1} has no statistically significant results to display')
-
-                sa_cols[2].pyplot(wc)
-
-        placeholder.empty()
-
-        # evaluate topics
-        with st.expander('Change number of topics'):
-
-            st.markdown('Select a number of topics here. If you want to evaluate a number of topics, please note that it will take several minutes.')
-
-            nt_cols = st.columns([1,3])
-            with nt_cols[0]:
-                st.session_state.num_topics = int(st.selectbox('Number of topics to generate', range(5,16)))
-
-            topic_btn = st.button(label='Explore number of topics')
-            if topic_btn:
-
-                coherence_df = pd.DataFrame()
-                ct = 1
-
-                for num_topics in range(5,16):
-
-                    topic_placeholder.markdown(f'. . . *Evaluating coherence of {num_topics} topics ({ct} of 11)* . . .')
-                    ct += 1
-                    lda_model_results = get_lda_model(id2word, corpus, num_topics)
-
-                    # Compute Perplexity - a measure of how good the model is. lower the better.
-                    perplexity = lda_model_results.log_perplexity(corpus)
-                    # Compute Coherence Score - Higher the topic coherence, the topic is more human interpretable
-                    coherence_model_lda = CoherenceModel(model=lda_model_results, texts=data_bigrams, dictionary=id2word, coherence='c_v')
-                    coherence_lda = coherence_model_lda.get_coherence()
-                    coherence_df = coherence_df.append({'Number of topics':num_topics, 'Perplexity':perplexity, 'Coherence':coherence_lda}, ignore_index=True)
-                    #st.markdown('{} topics - {} (lower is better) / {} (higher is better)'.format(num_topics, perplexity, coherence_lda))
+    st.caption('Click an item in the legend to exclude from the results. Double click to isolate that item.')
 
 
-                coh_cols = st.columns([3,1])
-                with coh_cols[0]:
-                    st.plotly_chart(plot_coherence(coherence_df))
-                with coh_cols[1]:
-                    st.dataframe(coherence_df)
+    st.plotly_chart(topicproc.topics_by_month(lda_model, topic_df, ta_abs_btn),use_container_width=True, height=400)
+
+    # perform topic modeling and convert to df
+    with st.expander("Review topics"):
+
+        for i in range(0,lda_model.num_topics):
+            num_top = len(topic_df[topic_df.top_topic==str(i)])
+            try:
+                num_all = topic_df[i].count()
+            except:
+                num_all = 0
+
+            sa_cols = st.columns([2,2,3])
+
+            with sa_cols[0]:
+
+                st.markdown(f'## Topic {i+1}')
+                st.markdown(f'**Statistically present in** {num_all:,} articles')
+                st.markdown(f'**Primary topic in** {num_top:,} articles')
+
+            with sa_cols[1]:
+                st.markdown(f'**Top keywords**')
+                st.markdown(f"{', '.join([lda_model.id2word[t[0]] for t in lda_model.get_topic_terms(i)])}")
+
+            try:
+                wc = topicproc.get_wc(lda_model, i)
+            except:
+                st.markdown(f'Topic {i+1} has no statistically significant results to display')
+
+            sa_cols[2].pyplot(wc)
+
+
+topic_placeholder.empty()
+
+
+with st.expander('What is the ideal number of topics to generate?'):
+
+    st.write('The ideal number of topics for a given set of documents will vary, depending on factors such as ***content, thematic cohesiveness, and others...*** By comparing certain metrics, the user can refine the number of topics best suited for a given set of documents.')
+    #st.write('If you want to evaluate a number of topics, please note that it will take several minutes.')
+
+    explore_topic_btn = st.button(label='Explore topic coherence for this dataset')
+    if explore_topic_btn:
+
+        coherence_df = pd.DataFrame()
+        ct = 1
+
+        eval_range = range(5,16)
+        for num_topics in eval_range:
+
+            topic_placeholder.markdown(f'. . . *Evaluating metricsaw using {num_topics} topics ({ct} of {len(eval_range)})* . . .')
+            ct += 1
+            lda_model_results = topicproc.get_lda_model(id2word, corpus, num_topics)
+            # Compute Perplexity - a measure of how good the model is. lower the better.
+            perplexity = lda_model_results.log_perplexity(corpus)
+            # Compute Coherence Score - Higher the topic coherence, the topic is more human interpretable
+            # using 'u_mass' which is known to be faster
+            # c_v may be better but is unsustainably slow in this environment
+            coherence_model_lda = CoherenceModel(model=lda_model_results, texts=data_bigrams, dictionary=id2word, coherence='u_mass')
+            coherence_lda = coherence_model_lda.get_coherence()
+            coherence_df = coherence_df.append({'Number of topics':num_topics, 'Perplexity':perplexity, 'Coherence':coherence_lda}, ignore_index=True)
+            coherence_df = pd.concat([coherence_df, pd.DataFrame([{'Number of topics':num_topics,
+                                'Perplexity':perplexity, 'Coherence':coherence_lda}])])
+            #st.markdown('{} topics - {} (lower is better) / {} (higher is better)'.format(num_topics, perplexity, coherence_lda))
 
 
         topic_placeholder.empty()
+        st.markdown('This plot shows the evaluations of a variety of topic models created using the Gensim implementation of Latent Dirichlet Allocation (LDA) method.')
+        st.markdown('In short, the Perplexity is an intrinsic evaluation measure of the predictive quality of the language model, with a lower number representing a better model. While this is useful for machine learning tasks, it may not be the best measure for creating a human interpretable model.')
+        st.markdown('Coherence is a measure of the internal semantic similiarity within a topic, with a higher number representing a more semantically clear topic. This is likely the better measure to use when creating a model to be visually reviewed. ***--a number that represents the overall topics’ interpretability and is used to assess the topics’ quality.***')
+        coh_cols = st.columns([3,1])
+        with coh_cols[0]:
+
+            st.plotly_chart(topicproc.plot_coherence(coherence_df))
+        with coh_cols[1]:
+            st.dataframe(coherence_df)
+
+
+placeholder.empty()
+
+st.markdown("### References")
+st.caption('[1] Blei, D. M., Ng, A. Y., Jordan, M. I. "Latent dirichlet allocation", The Journal of Machine Learning Research, 3 (2003):993–1022.')
+st.caption('[2] Röder, M., Both, A., & Hinneburg, A. (2015). Exploring the space of topic coherence measures. In Proceedings of the eighth ACM international conference on Web search and data mining (pp. 399–408). Retrieved from https://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf')

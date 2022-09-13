@@ -1,18 +1,35 @@
 plotly==5.1.0
+watchdog
 streamlit
 streamlit-webrtc
-hydralit
-hydralit_components
 natsort==7.1.1
 colorlover==0.3.0
-spacy==3.2.1
-https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.2.0/en_core_web_sm-3.2.0.tar.gz#egg=en_core_web_sm
+spacy>=3.0.0,<4.0.0
 nltk==3.6.5
 spacytextblob
-wordcloud==1.8.1
+wordcloud
 gensim==4.1.2
 textblob==0.15.3
-scikit-learn==1.0.1
-multi_rake==0.0.2
+scikit-learn
+# multi_rake==0.0.2
 textdescriptives==1.0.6
-tensorflow==2.7.0
+numpy==1.23.0  # Sept 2022, later versions of numpy not compatible with tensorflow-macos==2.9.2
+
+# TROUBLESHOOTING
+# non- m1 Mac
+# tensorflow
+
+# if hypy (dependency of some libraries) fails, may need to run the following:
+# export HDF5_DIR=/opt/homebrew/Cellar/hdf5/[VERSION]
+# pip install h5py
+# re-run pip install -r requirements.txt
+
+# m1 Mac - if grpcio fails, try the following
+# export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
+# export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
+# re-run pip install -r requirements.txt
+
+# m1 Mac - requires Python =<3.8 (as of Aug 2022, no tensorflow on PY3.9 or above)
+# m1 Mac may require tensorflow via these libraries
+tensorflow-macos
+tensorflow-metal

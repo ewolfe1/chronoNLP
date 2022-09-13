@@ -9,11 +9,10 @@ import matplotlib.pyplot as plt
 import colorlover as cl
 colors = cl.to_rgb(cl.scales['7']['qual']['Set2'])
 
-from multi_rake import Rake
+# from multi_rake import Rake
 
 from nltk import FreqDist
 from textblob import TextBlob, Word
-from hydralit import HydraHeadApp
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 
@@ -37,7 +36,7 @@ def get_wc(tf):
     wc = plt.imshow(wordcloud, interpolation='bilinear')
     plt.axis("off")
 
-    month = f'{st.session_state.s_date}-{st.session_state.e_date}' if tf['date'] == '.*' else datetime.strftime(datetime.strptime(tf['date'], "%Y-%m"), "%B %Y")
+    month = f'{st.session_state.start_date}-{st.session_state.end_date}' if tf['date'] == '.*' else datetime.strftime(datetime.strptime(tf['date'], "%Y-%m"), "%B %Y")
     source = 'All sources' if tf['source'] == '.*' else tf['source']
 
     #plt.title('{} -- {} ({} articles)'.format(month, source, tf['num']))
@@ -103,8 +102,10 @@ def get_rake(df, tf):
     data_clean = ' '.join(class_df.clean_text)
 
     for keyword, score in (rake.apply(data_full)):
-        rake_df = rake_df.append({'term':keyword,
-                                  'rake_score':score}, ignore_index=True)
+        # rake_df = rake_df.append({'term':keyword,
+        #                           'rake_score':score}, ignore_index=True)
+        rake_df = pd.concat([rake_df, pd.DataFrame([{'term':keyword,
+                                                'rake_score':score}])])
 
     # # filter df to exclude certain phrases
     rake_df = rake_df.sort_values('rake_score', ascending=False).head(200)
