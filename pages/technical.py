@@ -1,4 +1,5 @@
 import streamlit as st
+state = st.session_state
 import pandas as pd
 import numpy as np
 from datetime import datetime
@@ -12,32 +13,33 @@ import matplotlib.pyplot as plt
 from scripts import getdata
 getdata.page_config()
 
-def articles_by_pub():
+def items_by_source():
 
-    date_df = st.session_state.df_filtered
-    date_df = date_df.set_index('date')
+    # build plot
+    fig = go.Figure()
 
-    # build plot with a secondary y axis
-    fig = make_subplots(specs=[[{"secondary_y": True}]])
+    df = state.df_filtered
 
-    for source in date_df.source.unique():
-        d_df = date_df[date_df.source==source].resample('M')
-        fig.add_trace(go.Bar(x=[datetime.strftime(n,'%b %Y') for n,g in d_df], y=d_df.count()['title'],
-                            name='{} - {:,} items'.format(source, d_df.count()['title'].sum()),
-                            marker_color=(colors[list(date_df.source.unique()).index(source)])
+    for source in df.source.unique():
+        d_df = df[df.source==source].groupby('date')
+
+        fig.add_trace(go.Bar(x=[getdata.get_cleandate(n) for n,g in d_df], y=d_df.count()['label'],
+                            name='{} - {:,} items'.format(source, d_df.count()['label'].sum())
             ))
 
     # Update layout
     fig.update_layout(barmode='stack', xaxis_tickangle=45,
                       title='Distribution of items over time'
                       )
-    fig.update_yaxes(title_text="Items", secondary_y=False, showgrid=False)
+    fig.update_traces(marker_line_width=0)
+    fig.update_yaxes(title_text="Items")
+    fig.update_xaxes(title_text="Time")
 
     return fig
 
 def get_tech_details():
 
-    df = st.session_state.df_filtered
+    df = state.df_filtered
     tech_df = pd.DataFrame()
 
     for n,g in df.groupby('source'):
@@ -64,9 +66,9 @@ def get_tech_details():
     return tech_df
 
 # load data
-if 'init' not in st.session_state:
+if 'init' not in state:
     getdata.init_data()
-df_filtered = st.session_state.df_filtered
+df_filtered = state.df_filtered
 
 # placeholder for status updates
 placeholder = st.empty()
@@ -81,7 +83,7 @@ getdata.df_summary_header()
 # articles by publication
 placeholder.markdown('*. . . Analyzing publication data . . .*\n\n')
 
-st.plotly_chart(articles_by_pub(), use_container_width=True)
+st.plotly_chart(items_by_source(), use_container_width=True)
 st.table(get_tech_details())
 
 placeholder.empty()

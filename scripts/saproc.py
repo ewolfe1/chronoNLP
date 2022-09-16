@@ -1,4 +1,5 @@
-import streamlit as st
+import streamlit as st 
+state = st.session_state
 import pandas as pd
 from datetime import datetime
 import plotly.graph_objs as go

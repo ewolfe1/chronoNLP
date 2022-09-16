@@ -2,7 +2,9 @@ import pandas as pd
 import numpy as np
 from natsort import natsorted
 from datetime import datetime
+from dateutil.parser import parse
 import streamlit as st
+state = st.session_state
 import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
 from spacytextblob.spacytextblob import SpacyTextBlob
@@ -18,9 +20,9 @@ from ast import literal_eval
 # set page configuration. Can only be set once per session and must be first st command called
 def page_config():
 
-    if 'config' not in st.session_state:
+    if 'config' not in state:
         st.set_page_config(page_title='Text Explorer', page_icon=':newspaper:', layout='wide') #,initial_sidebar_state='collapsed')
-    st.session_state.config = True
+    state.config = True
 
 # load NLP model for spaCy
 @st.experimental_memo
@@ -45,9 +47,8 @@ nlp = load_model()
 # get date range from df
 def get_daterange(df):
     # get a list of dates represented in the data
-
     daterange = [d for d in natsorted(df['cleandate'].unique().tolist()) if d not in ['',None]]
-    st.session_state.daterange = daterange
+    state.daterange = daterange
 
     return daterange
 
@@ -67,8 +68,8 @@ def format_dates(d):
 # df summary header
 def df_summary_header():
 
-    df = st.session_state.df_filtered
-    daterange = st.session_state.daterange
+    df = state.df_filtered
+    daterange = state.daterange
     st.write(f'*Working dataset includes **{len(df):,} items** from **{len(df.source.unique())} sources** ({daterange[0]} - {daterange[-1]})*')
 
 # sentiment analysis
@@ -78,11 +79,43 @@ def get_sa(df):
     nltk.download('vader_lexicon')
     analyzer = SentimentIntensityAnalyzer()
 
+    def return_sa(text):
+        try:
+            return analyzer.polarity_scores(text)['compound']
+        except AttributeError:
+            return None
+
     # compound is weighted average; other measures are neg, neu, pos
-    df['compound'] = df['full_text'].apply(lambda x: analyzer.polarity_scores(x)['compound'])
-    df['title_compound'] = df['title'].apply(lambda x: analyzer.polarity_scores(x)['compound'])
+    df['compound'] = df['full_text'].apply(lambda x: return_sa(x))
+    df['label_compound'] = df['label'].apply(lambda x: return_sa(x))
 
     return df
+
+# format date based on user preference
+def get_cleandate(x):
+
+    if state['date_access'] == 'Year':
+        return f'{x.year}'
+    elif state['date_access'] == 'Month':
+        return f'{x.year}-{x.month:02}'
+    else:
+        return f'{x.year}-{x.month:02}-{x.day:02}'
+
+# parse dates for grouping
+def parse_date(x):
+    # format date
+    if 'date_format' in state and 'day first' in state['date_format']:
+        try:
+            return parse(str(x), default=datetime(2022, 1, 1), dayfirst=True)
+        except:
+            print('No Date or Invalid Date')
+            return None
+    else:
+        try:
+            return parse(str(x), default=datetime(2022, 1, 1))
+        except:
+            print('No Date or Invalid Date')
+            return None
 
 
 # pre-processing texts (cleaning, lemmas, readability)
@@ -98,7 +131,8 @@ def preprocess(df, _nlp_placeholder):
         return df
 
     # placeholder columns
-    for c in ['clean_text','lemmas','grade_level','readability']:
+    preproc_cols = ['clean_text','lemmas','grade_level','readability']
+    for c in preproc_cols:
         if c not in df.columns:
             df[c] = None
 
@@ -110,16 +144,19 @@ def preprocess(df, _nlp_placeholder):
 
         _nlp_placeholder.markdown(f'Processing item {ct} of {len(df)}')
 
+        if not r[preproc_cols].isnull().any():
+            continue
+
         # call spaCy for cleanup and lemmas - better than textblob's method
         doc = nlp(r['full_text'])
 
-        df.at[i,'clean_text'] =  ' '.join(' '.join(
-                [w.text.lower() for w in doc if w.text.lower() not in STOP_WORDS and
-                 not w.is_punct and not w.is_digit and not w.is_space]).split())
-
-        df.at[i,'clean_text'] =  ' '.join(' '.join(
+        clean_text =  ' '.join(' '.join(
                 [w.text.lower() for w in doc if w.text.lower() not in STOP_WORDS and \
                  not w.is_punct and not w.is_digit and not w.is_space]).split())
+        # need to account for blank values here
+        if clean_text == '' or clean_text == None:
+            clean_text = ''
+        df.at[i,'clean_text'] = clean_text
         df.at[i,'lemmas'] = ' '.join([w.lemma_.lower() for w in doc \
                 if not w.is_punct and not w.is_digit and not w.is_space])
 
@@ -130,6 +167,8 @@ def preprocess(df, _nlp_placeholder):
         # sentiment and Objectivity ratings from textblob
         df.at[i,'polarity'] = doc._.blob.polarity
         df.at[i,'subjectivity'] = doc._.blob.subjectivity
+
+        df = get_cleandate(df,i,r)
 
         ct += 1
 
@@ -150,10 +189,10 @@ def get_data(current_csv, tk_js):
 
     # set data source and open as dataframe
     df = pd.read_csv(current_csv, na_filter= False, parse_dates=['date'])
-    df[['source','full_text','title']].applymap(lambda x: x.encode('utf-8').decode('ascii', 'ignore'))
+    df[['source','full_text','label']].applymap(lambda x: x.encode('utf-8').decode('ascii', 'ignore'))
 
     try:
-        for c in ['title','full_text','clean_text','lemmas']:
+        for c in ['label','full_text','clean_text','lemmas']:
            df[c] = df[c].apply(literal_eval)
            df[c] = df[c].apply(lambda x: tokenizer.sequences_to_texts([x])[0])
     except:
@@ -161,30 +200,30 @@ def get_data(current_csv, tk_js):
 
     sourcenames = {'LJW':'Lawrence Journal-World','UDK':'University Daily Kansan'}
     df.source = df.source.apply(lambda x: sourcenames.get(x) if x in sourcenames else x)
-    df['cleandate'] = df['date'].apply(lambda x: datetime.strftime(x, '%Y-%m'))
 
     return df
 
 def default_vals():
 
     # reset all values to full dataset
-    st.session_state.df_filtered = st.session_state.df
-    daterange = get_daterange(st.session_state.df)
-    st.session_state.daterange = daterange
-    st.session_state.daterange_full = daterange
-    st.session_state.start_date = daterange[0]
-    st.session_state.end_date = daterange[-1]
+    state.df_filtered = state.df
+    daterange = get_daterange(state.df)
+    state.daterange = daterange
+    state.daterange_full = daterange
+    state.start_date = daterange[0]
+    state.end_date = daterange[-1]
 
 # load default data when no data is present
 def init_data():
 
     # # if data already exists, skip the rest
-    if 'init' in st.session_state:
+    if 'init' in state:
         return
 
     # set input data files
     current_csv = 'data/current_articles.csv'
     tk_js = 'data/tokenizer.json'
+    state.date_access = 'Month'
 
     # placeholder for status updates
     loading = st.empty()
@@ -195,9 +234,12 @@ def init_data():
 
     # configure data range and filter data
     df = get_data(current_csv, tk_js)
-    st.session_state.df = df
 
     placeholder.markdown('*. . . Pre-processing data . . .*\n\n')
+
+    # update dates
+    df['date'] = df['date'].apply(lambda x: parse_date(x))
+    df['cleandate'] = df['date'].apply(lambda x: get_cleandate(x))
 
     # leave as placeholder for preprocessing on the fly
     # much quicker to do in advance (~5 min for 3,500 articles)
@@ -207,26 +249,52 @@ def init_data():
     df = get_sa(df)
 
     # set other default values for session_state
+    state.df = df
     default_vals()
 
     loading.empty()
     placeholder.empty()
 
-    st.session_state.init = True
+    state.init = True
     return
 
 
 # display sample df
 def display_initial_df(df):
     # display truncated dataset
-    t_df = df[['uniqueID','date','title','full_text','source']].sort_values(by='date').sample().copy().assign(hack='').set_index('hack')
-    for c in['uniqueID','full_text','title']:
+    t_df = df[['uniqueID','date','label','full_text','source']].sort_values(by='date').sample().copy().assign(hack='').set_index('hack')
+    for c in['uniqueID','full_text','label']:
         t_df[c] = t_df[c].apply(lambda x: x[:100] + '...')
 
     st.table(t_df)
 
+# checking pre-processed data to avoid doing twice
+def check_user_df():
+
+    req_cols =['label','date','source','full_text','uniqueID','clean_text',
+            'lemmas','grade_level','readability','polarity','subjectivity',
+            'cleandate','compound','label_compound']
+    df = state.user_df
+    if all((c in df.columns) and (df[c].count()==len(df)) for c in req_cols):
+        return True
+    except:
+        return False
+
+def set_user_data(df, daterange):
+
+    # tell streamlit we are using user data
+    state.userdata = True
+    state.df = user_df
+    state.df_filtered = user_df
+    state.daterange = daterange
+    state.daterange_full = daterange
+    state.start_date = daterange[0]
+    state.end_date = daterange[-1]
+    state.init = True
+
 # display user-uploaded df
 def display_user_df(df):
+
     # display truncated dataset
     t_df = df.sample(3).copy().assign(hack='').set_index('hack')
     for c in t_df.columns:
@@ -235,35 +303,18 @@ def display_user_df(df):
     st.table(t_df)
 
 # allow user upload (csv, excel, json)
-def user_upload_prelim(uploaded_file):
-
-    if uploaded_file.name.split('.')[-1] == 'csv':
-        df = pd.read_csv(uploaded_file)
-        return df
-    elif uploaded_file.name.split('.')[-1] in ['js','json']:
-        df = pd.read_json(uploaded_file)
-        return df
-    else:
-        st.markdown(f"You uploaded {uploaded_file.name}")
-        st.markdown("Please upload in tabular or JSON format (.csv, .xls, .xlsx, .js, .json)")
-        return None
-
-# allow user upload (csv, excel, json)
 def user_upload(uploaded_file):
 
-    if uploaded_file.name.split('.')[-1] == 'csv':
-        df = pd.read_csv(uploaded_file, parse_dates=['date'])
-        df = df[~df.full_text.isnull()]
-        df['cleandate'] = df['date'].apply(lambda x: datetime.strftime(x, '%Y-%m'))
+    if uploaded_file.type == 'text/csv':
+        df = pd.read_csv(uploaded_file)
+
         # return df.sample(100)
         return df
-    elif uploaded_file.name.split('.')[-1] in ['js','json']:
-        df = pd.read_json(uploaded_file, convert_dates=['dates'])
-        df = df[~df.full_text.isnull()]
-        df['cleandate'] = df['date'].apply(lambda x: datetime.strftime(x, '%Y-%m'))
-        # return df.sample(30)
-        return df
+
+    # elif uploaded_file.type == 'application/json':
+    #     df = pd.read_json(uploaded_file)
+    #     # return df.sample(30)
+    #     return df
     else:
-        st.markdown(f"You uploaded {uploaded_file.name}")
-        st.markdown("Please upload in tabular or JSON format (.csv, .xls, .xlsx, .js, .json)")
+        st.markdown(f"You uploaded {uploaded_file.name} -- Please upload in CSV format.")
         return None

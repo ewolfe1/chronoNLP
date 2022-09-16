@@ -1,4 +1,5 @@
-import streamlit as st
+import streamlit as st 
+state = st.session_state
 from streamlit import components
 import pandas as pd
 from datetime import datetime

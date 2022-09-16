@@ -1,4 +1,5 @@
 import streamlit as st
+state = st.session_state
 import pandas as pd
 from datetime import datetime
 import plotly.graph_objs as go
@@ -11,14 +12,14 @@ getdata.page_config()
 def get_sa_markdown(sa_btn):
 
     sa_df = df_filtered.sort_values('compound', ascending=sa_btn).head(10)
-    sa_df = sa_df[['source','uniqueID','title','date','compound']]
+    sa_df = sa_df[['source','uniqueID','label','date','compound']]
 
     return sa_df
 
 # load data
-if 'init' not in st.session_state:
+if 'init' not in state:
     getdata.init_data()
-df_filtered = st.session_state.df_filtered
+df_filtered = state.df_filtered
 
 # placeholder for status updates
 placeholder = st.empty()
@@ -36,7 +37,7 @@ sent_btn = st.radio('', ['Article Text','Headline'], horizontal=True)
 if sent_btn == 'Article Text':
     sent_query = 'compound'
 else:
-    sent_query = 'title_compound'
+    sent_query = 'label_compound'
 
 st.markdown("### Sentiment over time")
 st.caption("Distribution of mean sentiment by month. Scale: 1.0 is most positive, -1.0 is most negative.")
@@ -77,7 +78,7 @@ placeholder.markdown('*. . . Evaluating article sentiment . . .*\n\n')
 #     for i,r in sa_df.iterrows():
 #         sa_cols = st.columns([1,3,1,1])
 #         sa_cols[0].markdown(f'{r.source}')
-#         sa_cols[1].markdown(f'[{r.title}]({r.uniqueID})')
+#         sa_cols[1].markdown(f'[{r.label}]({r.uniqueID})')
 #         sa_cols[2].markdown(f'{r.date}')
 #         sa_cols[3].markdown(f'{r.compound}')
 

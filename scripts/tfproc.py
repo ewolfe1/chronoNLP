@@ -1,4 +1,5 @@
 import streamlit as st
+state = st.session_state
 import pandas as pd
 import numpy as np
 from natsort import natsorted
@@ -16,16 +17,6 @@ from textblob import TextBlob, Word
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
 
-# import subprocess
-# import textblob
-
-# @st.cache
-# def tb_corpora():
-#     cmd = ['python3','-m','textblob.download_corpora']
-#     subprocess.run(cmd)
-#
-# tb_corpora()
-
 # wordcloud
 def get_wc(tf):
 
@@ -36,7 +27,7 @@ def get_wc(tf):
     wc = plt.imshow(wordcloud, interpolation='bilinear')
     plt.axis("off")
 
-    month = f'{st.session_state.start_date}-{st.session_state.end_date}' if tf['date'] == '.*' else datetime.strftime(datetime.strptime(tf['date'], "%Y-%m"), "%B %Y")
+    month = f'{state.start_date}-{state.end_date}' if tf['date'] == '.*' else datetime.strftime(datetime.strptime(tf['date'], "%Y-%m"), "%B %Y")
     source = 'All sources' if tf['source'] == '.*' else tf['source']
 
     #plt.title('{} -- {} ({} articles)'.format(month, source, tf['num']))
@@ -60,7 +51,6 @@ def results_title(tf):
 # filter df
 def filter_df(df, tf):
 
-    df_filtered = df
     class_df = df[((df['cleandate'] >= tf['date_start']) & (df['cleandate'] <= tf['date_end'])) & (df.source.str.contains('|'.join(tf['source'])))].copy()
     tf['num'] = len(class_df)
 

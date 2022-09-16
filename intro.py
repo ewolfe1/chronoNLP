@@ -1,4 +1,5 @@
 import streamlit as st
+state = st.session_state
 from scripts import getdata
 getdata.page_config()
 
@@ -27,5 +28,8 @@ st.markdown("""*Available tools include:*
 
 # placeholder for status updates
 placeholder = st.empty()
+
+st.markdown("Pick a sample dataset to get started.")
+
 placeholder.markdown('*. . . Initializing . . .*\n\n')
 placeholder.empty()

@@ -1,4 +1,5 @@
 import streamlit as st
+state = st.session_state
 # from streamlit import components
 import pandas as pd
 from datetime import datetime
@@ -16,10 +17,10 @@ from scripts import getdata, topicproc
 getdata.page_config()
 
 # load data
-if 'init' not in st.session_state:
+if 'init' not in state:
     getdata.init_data()
 
-df_filtered = st.session_state.df_filtered
+df_filtered = state.df_filtered
 
 # header
 st.subheader('Topic modeling')
@@ -53,13 +54,13 @@ with st.form(key='topic_selection'):
 
     with nt_cols[0]:
         nt_range = list(range(5,16))
-        if 'num_topics' not in st.session_state:
-            st.session_state.num_topics = 8
+        if 'num_topics' not in state:
+            state.num_topics = 8
 
-        nt_selected = st.session_state.num_topics
+        nt_selected = state.num_topics
         # num_topics_selected = int(st.selectbox('Number of topics to generate', range(5,16)))
-        # st.session_state.num_topics = int(st.selectbox('Number of topics to generate', range(5,16)))
-        st.session_state.num_topics = int(st.selectbox('Number of topics to generate', nt_range, index=nt_range.index(nt_selected)))
+        # state.num_topics = int(st.selectbox('Number of topics to generate', range(5,16)))
+        state.num_topics = int(st.selectbox('Number of topics to generate', nt_range, index=nt_range.index(nt_selected)))
 
     with nt_cols[1]:
 
@@ -87,8 +88,8 @@ if topic_btn:
 
     topic_placeholder.markdown('*. . . Building topic models for dataset  (step 2 of 4) . . .*\n')
 
-    lda_model = topicproc.get_lda_model(id2word, corpus, st.session_state.num_topics)
-    topic_placeholder.markdown('*. . . Assigning articles to topics  (step 3 of 4) . . .*\n')
+    lda_model = topicproc.get_lda_model(id2word, corpus, state.num_topics)
+    topic_placeholder.markdown('*. . . Assigning items to topics  (step 3 of 4) . . .*\n')
     topic_df = topicproc.get_topic_df(df_filtered, lda_model, corpus)
 
     # plot topic frequency over time
@@ -114,8 +115,8 @@ if topic_btn:
             with sa_cols[0]:
 
                 st.markdown(f'## Topic {i+1}')
-                st.markdown(f'**Statistically present in** {num_all:,} articles')
-                st.markdown(f'**Primary topic in** {num_top:,} articles')
+                st.markdown(f'**Statistically present in** {num_all:,} items')
+                st.markdown(f'**Primary topic in** {num_top:,} items')
 
             with sa_cols[1]:
                 st.markdown(f'**Top keywords**')

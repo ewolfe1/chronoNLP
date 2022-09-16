@@ -1,10 +1,11 @@
-import streamlit as st
+import streamlit as st 
+state = st.session_state
 import pandas as pd
 from scripts import getdata, topicproc
 getdata.page_config()
 
 # load data
-if 'init' not in st.session_state:
+if 'init' not in state:
     getdata.init_data()
 
 # placeholder for status updates
@@ -14,9 +15,9 @@ if 'init' not in st.session_state:
 st.subheader('Filter this dataset')
 
 # date selector
-df = st.session_state.df
-daterange = st.session_state.daterange
-df_filtered = st.session_state.df_filtered
+df = state.df
+daterange = state.daterange
+df_filtered = state.df_filtered
 
 st.write('**Original dataset**')
 st.write(f"*Original dataset includes **{len(df):,} items** from **{len(df.source.unique())} sources** ({df['cleandate'].min()} - {df['cleandate'].max()})*")
@@ -25,14 +26,14 @@ with st.form(key='filter_data'):
 
     date_cols = st.columns((2,2,2))
 
-    daterange_full = st.session_state.daterange_full
-    daterange = st.session_state.daterange
+    daterange_full = state.daterange_full
+    daterange = state.daterange
 
     with date_cols[0]:
-        start_date = st.selectbox('Start date', daterange_full, index=daterange_full.index(st.session_state.start_date))
+        start_date = st.selectbox('Start date', daterange_full, index=daterange_full.index(state.start_date))
 
     with date_cols[1]:
-        end_date = st.selectbox('End date', daterange_full, index=daterange_full.index(st.session_state.end_date))
+        end_date = st.selectbox('End date', daterange_full, index=daterange_full.index(state.end_date))
 
     df_filtered = df[(df['cleandate'] >= start_date) & (df['cleandate'] <= end_date)]
     df_filtered.reset_index(inplace=True)
@@ -61,22 +62,22 @@ with st.form(key='filter_data'):
     filter = st.form_submit_button("Apply filters")
 
     if filter:
-        st.session_state.start_date = start_date
-        st.session_state.end_date = end_date
-        st.session_state.df_filtered = df_filtered
-        st.session_state.daterange = daterange
+        state.start_date = start_date
+        state.end_date = end_date
+        state.df_filtered = df_filtered
+        state.daterange = daterange
 
-if 'df_filtered' in st.session_state and len(st.session_state.df_filtered) != len(st.session_state.df):
+if 'df_filtered' in state and len(state.df_filtered) != len(state.df):
 
     st.write('## Filtered dataset')
     getdata.df_summary_header()
 
-    if 'userdata' in st.session_state:
+    if 'userdata' in state:
 
         st.markdown('Download this filtered dataset.')
 
-        if 'uploaded_file' in st.session_state:
-            fn = st.session_state.uploaded_file.replace('.csv','_FILTERED.csv')
+        if 'uploaded_file' in state:
+            fn = state.uploaded_file.replace('.csv','_FILTERED.csv')
         else:
             fn = 'filtered_dataset.csv'
 
