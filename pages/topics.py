@@ -7,8 +7,8 @@ import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
-import colorlover as cl
-colors = cl.to_rgb(cl.scales['7']['qual']['Set2'])
+# import colorlover as cl
+# colors = cl.to_rgb(cl.scales['7']['qual']['Set2'])
 import gensim
 import gensim.corpora as corpora
 from gensim.models import CoherenceModel
@@ -147,7 +147,7 @@ with st.expander('What is the ideal number of topics to generate?'):
         eval_range = range(5,16)
         for num_topics in eval_range:
 
-            topic_placeholder.markdown(f'. . . *Evaluating metricsaw using {num_topics} topics ({ct} of {len(eval_range)})* . . .')
+            topic_placeholder.markdown(f'. . . *Evaluating metrics using {num_topics} topics ({ct} of {len(eval_range)})* . . .')
             ct += 1
             lda_model_results = topicproc.get_lda_model(id2word, corpus, num_topics)
             # Compute Perplexity - a measure of how good the model is. lower the better.

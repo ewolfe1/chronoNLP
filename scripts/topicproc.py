@@ -1,4 +1,4 @@
-import streamlit as st 
+import streamlit as st
 state = st.session_state
 from streamlit import components
 import pandas as pd
@@ -7,8 +7,8 @@ import plotly.graph_objs as go
 from plotly.subplots import make_subplots
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
-import colorlover as cl
-colors = cl.to_rgb(cl.scales['7']['qual']['Set2'])
+# import colorlover as cl
+# colors = cl.to_rgb(cl.scales['7']['qual']['Set2'])
 import gensim
 import gensim.corpora as corpora
 from gensim.models import CoherenceModel

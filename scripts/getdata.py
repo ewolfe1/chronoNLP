@@ -8,6 +8,7 @@ state = st.session_state
 import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
 from spacytextblob.spacytextblob import SpacyTextBlob
+import seaborn as sns
 
 import textdescriptives as td
 import nltk
@@ -61,7 +62,10 @@ def format_dates(d):
         try:
             d = datetime.strftime(datetime.strptime(d, "%Y-%m"), "%B %Y")
         except:
-            pass
+            try:
+                d = datetime.strftime(datetime.strptime(d, "%Y"), "%Y")
+            except:
+                pass
 
     return d
 
@@ -117,6 +121,8 @@ def parse_date(x):
             print('No Date or Invalid Date')
             return None
 
+def clean_tok(t):
+    return t.strip().replace("’","'").replace(" - ","")
 
 # pre-processing texts (cleaning, lemmas, readability)
 @st.experimental_memo(suppress_st_warning=True)
@@ -124,15 +130,15 @@ def preprocess(df, _nlp_placeholder):
 
     # check for already preprocessed data
     cols_to_check = ['clean_text','lemmas','grade_level','readability',
-                    'polarity','subjectivity','compound','title_compound']
+                    'polarity','subjectivity','compound','label_compound',
+                    'pos_all','entities_all']
 
     if all((c in df.columns) and (df[c].count()==len(df)) for c in cols_to_check):
         st.markdown('Data appears to be already preprocessed.')
         return df
 
-    # placeholder columns
-    preproc_cols = ['clean_text','lemmas','grade_level','readability']
-    for c in preproc_cols:
+    # create placeholder columns
+    for c in cols_to_check:
         if c not in df.columns:
             df[c] = None
 
@@ -142,9 +148,9 @@ def preprocess(df, _nlp_placeholder):
 
     for i,r in df.iterrows():
 
-        _nlp_placeholder.markdown(f'Processing item {ct} of {len(df)}')
+        _nlp_placeholder.markdown(f'Processing item {ct:,} of {len(df):,} ({int(ct/len(df)*100)}% complete)')
 
-        if not r[preproc_cols].isnull().any():
+        if not r[cols_to_check].isnull().any():
             continue
 
         # call spaCy for cleanup and lemmas - better than textblob's method
@@ -168,9 +174,15 @@ def preprocess(df, _nlp_placeholder):
         df.at[i,'polarity'] = doc._.blob.polarity
         df.at[i,'subjectivity'] = doc._.blob.subjectivity
 
-        df = get_cleandate(df,i,r)
+        # pos and ner
+        df.at[i,'pos_all'] =  [(clean_tok(t.text), t.pos_) for t in doc if t.pos_ not in ['PUNCT','SPACE']]
+        df.at[i, 'entities_all'] = [(clean_tok(ent.text), ent.label_) for ent in doc.ents]
 
         ct += 1
+
+    # update dates
+    df['date'] = df['date'].apply(lambda x: parse_date(x))
+    df['cleandate'] = df['date'].apply(lambda x: get_cleandate(x))
 
     _nlp_placeholder.markdown('*Gathering Sentiment analysis*')
     df = get_sa(df)
@@ -212,6 +224,7 @@ def default_vals():
     state.daterange_full = daterange
     state.start_date = daterange[0]
     state.end_date = daterange[-1]
+    state.colors = sns.color_palette(None, len(state.df.source.unique()))
 
 # load default data when no data is present
 def init_data():
@@ -221,7 +234,7 @@ def init_data():
         return
 
     # set input data files
-    current_csv = 'data/current_articles.csv'
+    current_csv = 'data/ljw.csv'
     tk_js = 'data/tokenizer.json'
     state.date_access = 'Month'
 
@@ -271,26 +284,27 @@ def display_initial_df(df):
 # checking pre-processed data to avoid doing twice
 def check_user_df():
 
-    req_cols =['label','date','source','full_text','uniqueID','clean_text',
+    cols_to_check = ['label','date','source','full_text','uniqueID','clean_text',
             'lemmas','grade_level','readability','polarity','subjectivity',
             'cleandate','compound','label_compound']
     df = state.user_df
-    if all((c in df.columns) and (df[c].count()==len(df)) for c in req_cols):
+    if all(c in df.columns for c in cols_to_check):
         return True
-    except:
+    else:
         return False
 
 def set_user_data(df, daterange):
 
     # tell streamlit we are using user data
     state.userdata = True
-    state.df = user_df
-    state.df_filtered = user_df
+    state.df = df
+    state.df_filtered = df
     state.daterange = daterange
     state.daterange_full = daterange
     state.start_date = daterange[0]
     state.end_date = daterange[-1]
     state.init = True
+    state.colors = sns.color_palette(None, len(df.source.unique()))
 
 # display user-uploaded df
 def display_user_df(df):
@@ -298,9 +312,15 @@ def display_user_df(df):
     # display truncated dataset
     t_df = df.sample(3).copy().assign(hack='').set_index('hack')
     for c in t_df.columns:
-        t_df[c] = t_df[c].apply(lambda x: x[:100] + '...' if len(str(x)) > 100 else x)
+        try:
+            t_df[c] = t_df[c].apply(lambda x: x[:100] + '...' if len(str(x)) > 100 else x)
+        except TypeError:
+            try:
+                t_df[c] = t_df[c].apply(lambda x: x[:5])
+            except:
+                pass
 
-    st.table(t_df)
+    return t_df
 
 # allow user upload (csv, excel, json)
 def user_upload(uploaded_file):

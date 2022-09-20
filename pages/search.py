@@ -4,8 +4,8 @@ import pandas as pd
 import numpy as np
 from datetime import datetime
 from natsort import natsorted
-import colorlover as cl
-colors = cl.to_rgb(cl.scales['7']['qual']['Set2'])
+# import colorlover as cl
+# colors = cl.to_rgb(cl.scales['7']['qual']['Set2'])
 import plotly.express as px
 import plotly.graph_objs as go
 from wordcloud import WordCloud
@@ -45,7 +45,7 @@ def plot_term_by_source(df, searchterm, kwsearch_abs_btn):
             kwsearch=([t/num_articles for t in kwsearch])
 
         fig.add_trace(go.Scatter(x=[n for n,g in d_df], y=kwsearch,
-                        name=f'{source} ({kwcount} total uses)', marker_color=(colors[list(df.source.unique()).index(source)])
+                        name=f'{source} ({kwcount} total uses)', marker_color=(state.colors[list(df.source.unique()).index(source)])
                 ))
 
     return fig
@@ -113,11 +113,11 @@ kw_cols = st.columns(2)
 with kw_cols[0]:
     searchterm = st.text_input("Enter keyword(s), separated by a comma", value='covid-19')
     kwmethod_btn = st.radio('', ['Partial match','Exact match'], key='kwmethod', horizontal=True)
-    kwsearch_btn = st.radio('View results as a ', ['Graph','Table'], key='kwsearch', horizontal=True)
+    # kwsearch_btn = st.radio('View results as a ', ['Graph','Table'], key='kwsearch', horizontal=True)
 
 kw_abs, kw_norm, kw_df = plot_terms_by_month(df_filtered, searchterm)
 
-kw_tab1, kw_tab2, kw_tab3 = st.tabs(["Raw count", "Normalized", "Table"])
+kw_tab1, kw_tab2, kw_tab3 = st.tabs(["Raw count (graph)", "Normalized (graph)", "Table"])
 
 with kw_tab1:
     st.write('Raw count of keyword frequency over time')

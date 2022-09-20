@@ -1,10 +1,10 @@
-import streamlit as st 
+import streamlit as st
 state = st.session_state
 import pandas as pd
 from datetime import datetime
 import plotly.graph_objs as go
-import colorlover as cl
-colors = cl.to_rgb(cl.scales['7']['qual']['Set2'])
+# # import colorlover as cl
+# colors = cl.to_rgb(cl.scales['7']['qual']['Set2'])
 
 
 @st.cache
@@ -28,7 +28,7 @@ def get_topic_plot(df, sent_query):
 
         fig.add_trace(go.Scatter(x=[n for n,g in d_df], y=sents,
                         name=source, mode='lines', line_shape='spline',line_smoothing=.2,
-                         marker_color=(colors[list(df.source.unique()).index(source)])))
+                         marker_color=(state.colors[list(df.source.unique()).index(source)])))
 
     fig.update_layout(yaxis_range=['-1.05','1.05'])
 
@@ -43,7 +43,7 @@ def get_sent_boxplot(df, sent_query):
 
         # box plot
         # fig.add_trace(go.Box(y=df[df.source==source][sent_query].tolist(), name=source,jitter=0.4,pointpos=1.6,boxpoints='all',
-        # marker_color=(colors[list(df.source.unique()).index(source)]), showlegend=False))
+        # marker_color=state.colors[list(df.source.unique()).index(source)]), showlegend=False))
 
         # violin plot
         fig.add_trace(go.Violin(y=df[df.source==source][sent_query].tolist(), box_visible=False, points='all',meanline_visible=True,meanline_color='black', fillcolor=colors[list(df.source.unique()).index(source)], opacity=0.6, x0=source))
@@ -67,7 +67,7 @@ def plot_sa_multiterm(df, searchterm_multi, sent_query):
         # sum of all sources
         fig.add_trace(go.Scatter(x=[n for n,g in d_df], y=sents,
                         name=term, mode='lines', line_shape='spline',line_smoothing=.2
-                         #marker_color=(colors[searchterm_multi.split(',').index(term)])
+                         #marker_color=(state.colors[searchterm_multi.split(',').index(term)])
                 ))
 
     fig.update_layout(yaxis_range=['-1.05','1.05'])
@@ -86,11 +86,11 @@ def get_sent_boxplot_multiterm(df, searchterm_multi, sent_query):
 
         # box plot
         # fig.add_trace(go.Box(y=df[df.source==source][sent_query].tolist(), name=source,jitter=0.4,pointpos=1.6,boxpoints='all',
-        # marker_color=(colors[list(df.source.unique()).index(source)]), showlegend=False))
+        # marker_color=(state.colors[list(df.source.unique()).index(source)]), showlegend=False))
 
         # violin plot
         fig.add_trace(go.Violin(y=search_df[sent_query].tolist(), box_visible=False, points='all',meanline_visible=True,meanline_color='black', opacity=0.6, x0=term))
-        # fillcolor=colors[list(df.source.unique()).index(source)],
+        # fillcolor=state.colors[list(df.source.unique()).index(source)],
 
     fig.update_layout(showlegend=False)
     return fig

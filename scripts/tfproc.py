@@ -7,15 +7,13 @@ from datetime import datetime
 import plotly.graph_objs as go
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
-import colorlover as cl
-colors = cl.to_rgb(cl.scales['7']['qual']['Set2'])
-
 # from multi_rake import Rake
 
 from nltk import FreqDist
 from textblob import TextBlob, Word
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
+from scripts import getdata
 
 # wordcloud
 def get_wc(tf):
@@ -27,24 +25,29 @@ def get_wc(tf):
     wc = plt.imshow(wordcloud, interpolation='bilinear')
     plt.axis("off")
 
-    month = f'{state.start_date}-{state.end_date}' if tf['date'] == '.*' else datetime.strftime(datetime.strptime(tf['date'], "%Y-%m"), "%B %Y")
-    source = 'All sources' if tf['source'] == '.*' else tf['source']
-
-    #plt.title('{} -- {} ({} articles)'.format(month, source, tf['num']))
     plt.close()
     return wc.figure
 
 def results_title(tf):
 
-    ms = datetime.strftime(datetime.strptime(tf["date_start"],'%Y-%m'),'%B %Y')
-    me = datetime.strftime(datetime.strptime(tf["date_end"],'%Y-%m'),'%B %Y')
+    # ms = datetime.strftime(datetime.strptime(tf["date_start"],'%Y-%m'),'%B %Y')
+    # me = datetime.strftime(datetime.strptime(tf["date_end"],'%Y-%m'),'%B %Y')
+    ms = getdata.format_dates(tf["date_start"])
+    me = getdata.format_dates(tf["date_end"])
 
     kwd_label = {'Terms':'Most frequent terms',
                 'TF-IDF':'TF-IDF results',
                 'Keywords':'RAKE keywords'}
 
     dates = f"{ms} to {me}" if ms != me else ms
-    title = f"{kwd_label.get(tf['kwd'])} from {dates} --- {'/'.join(tf['source'])} ({tf['num']} articles)"
+    source = '/'.join(tf['source'])
+
+    if source == '' or source is  None:
+        source = 'All sources in range'
+    title = f"""**{kwd_label.get(tf['kwd'])}**\n
+Date(s): {dates}\n
+Source(s): {source}\n
+Number of items: {tf['num']:,}"""
 
     return title
 
@@ -67,7 +70,7 @@ def get_tf(df, tf):
 
     class_df, tf, omit = filter_df(df, tf)
 
-    tb_to_eval = TextBlob(' '.join(class_df.clean_text))
+    tb_to_eval = TextBlob(' '.join(class_df[~class_df.clean_text.isnull()].clean_text))
     grouped_text = FreqDist([' '.join(ng) for ng in tb_to_eval.ngrams(tf['ngram'])]).most_common(200)
     grouped_text = [g for g in grouped_text if g[0] not in omit]
     # get weighted string of common words
@@ -117,8 +120,8 @@ def get_tfidf(df, tf):
     class_df, tf, omit = filter_df(df, tf)
 
     cvec = CountVectorizer(stop_words=None, min_df=3, max_df=50, ngram_range=(tf['ngram'], tf['ngram']))
-    sf = cvec.fit_transform([t for t in class_df.clean_text.values])
-    data = ' '.join(class_df.clean_text)
+    sf = cvec.fit_transform([t for t in class_df[~class_df.clean_text.isnull()].clean_text.values])
+    data = ' '.join(class_df[~class_df.clean_text.isnull()].clean_text)
 
     transformer = TfidfTransformer()
     transformed_weights = transformer.fit_transform(sf)

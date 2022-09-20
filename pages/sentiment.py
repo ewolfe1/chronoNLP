@@ -3,8 +3,8 @@ state = st.session_state
 import pandas as pd
 from datetime import datetime
 import plotly.graph_objs as go
-import colorlover as cl
-colors = cl.to_rgb(cl.scales['7']['qual']['Set2'])
+# import colorlover as cl
+# colors = cl.to_rgb(cl.scales['7']['qual']['Set2'])
 from scripts import saproc, getdata
 getdata.page_config()
 

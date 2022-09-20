@@ -30,7 +30,10 @@ def tf_form(tf):
         tf['date_end'] = st.selectbox('End date', daterange, index=len(daterange)-1)
 
         sources = list(df.source.unique())
-        tf['source'] = st.multiselect('Source',sources,key=f'tfs{n}',default=sources[0])
+        tf['source'] =  st.multiselect('Source(s) (leave blank to select all)',
+            sources,key=f'tfs{n}',default=sources[0])
+
+        # tf['source'] = st.multiselect('Source(s)',sources,key=f'tfs{n}',default=sources[1])
         tf['ngram'] = st.selectbox('Ngrams',[1,2,3],key=f'tfng{n}', index=n-1)
         tf['omit'] = st.text_input('Terms to omit from the results (separated by a comma)',key=f'tfmin{n}')
 
@@ -45,7 +48,6 @@ df = state.df_filtered
 
 # placeholder for status updates
 placeholder = st.empty()
-
 
 st.subheader('Term frequency')
 getdata.df_summary_header()
@@ -97,9 +99,6 @@ with tf_col1:
         elif tf1['kwd'] == 'Keywords':
             t1_df, tf1 = tfproc.get_rake(df, tf1)
 
-        st.write(tf1['date_start'])
-        st.write(tf1['date_end'])
-        
         st.markdown(tfproc.results_title(tf1))
         st.table(t1_df)
 
@@ -107,8 +106,9 @@ with tf_col1:
         wc1 = tfproc.get_wc(tf1)
         st.pyplot(wc1)
 
-    except ValueError:
+    except ValueError as ve:
         st.write('There are no results from this search')
+        st.write(ve)
 
     # set values to session state
     state.tf_forms[0] = tf1

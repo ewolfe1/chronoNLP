@@ -3,7 +3,7 @@ watchdog
 streamlit
 streamlit-webrtc
 natsort==7.1.1
-colorlover==0.3.0
+seaborn
 spacy>=3.0.0,<4.0.0
 nltk==3.6.5
 spacytextblob
@@ -33,3 +33,8 @@ numpy==1.23.0  # Sept 2022, later versions of numpy not compatible with tensorfl
 # m1 Mac may require tensorflow via these libraries
 tensorflow-macos
 tensorflow-metal
+
+# problems with installing tensorflow factories (e.g. spacytextblob)?
+# you may need a Rust compiler (check carefully the error message), try this:
+# curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+# source "$HOME/.cargo/env"
