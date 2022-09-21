@@ -8,3 +8,4 @@ data/us-counties.csv
 data/us-counties-full.csv
 *_old.csv
 venv/
+*.ipynb
