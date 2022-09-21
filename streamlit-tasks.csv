@@ -1,10 +1,10 @@
 Page,Task,Status,Note
-app,update text,,
+intro,update text,,
 filter,"Add descriptive text to page, including a note that the filter will carry to other pages",,
-filter,download filtered dataset,,
+filter,download filtered dataset,done,
 GENERAL,"make sure that chunking is available when appropriate (e.g. topics, sentiment)",,
-GENERAL,Bad characters in downloaded csv - e.g. Äî ,,
-RESEARCH,https://github.com/neuml/txtai,,
+GENERAL,Bad characters in downloaded csv - e.g. Äî,done,Excel issue
+RESEARCH,https://github.com/neuml/txtai,done,not doing this
 search,Add descriptive text to page,,
 search,add capability for wildcard or partial match,,
 sentiment,Add descriptive text to page,,
@@ -13,9 +13,11 @@ technical,"rename to ""Overview"" or something",,
 technical,Add descriptive text to page,,
 termfreq,Add descriptive text to page,,
 topics,check on topics from filtered_df - not all items are reflected in topics!,,
-topics,update bubbles to be bigger (normalized?),,
+topics,update bubbles to be bigger/smaller (normalized?),,
 topics,allow user download of topic data,,
 upload,Add descriptive text to page,,
 upload,make sure many date formats are accepted,,"try to find elegant way to display m/d/y, m/y, and y only"
 upload,"test user upload for clean_text, lemmas, etc (don't want to preprocess 2x)",,
 upload,do some more testing across pages,,
+upload,"Allow for zip of text files, with CSV of metadata",,
+termfreq,Download Top 200(?) terms with counts and metadata,,

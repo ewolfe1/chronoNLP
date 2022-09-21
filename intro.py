@@ -14,7 +14,7 @@ st.write("""<style>
 
 
 
-st.markdown("""This site was built to facilitate computational exploration of text-based materials with a time component, providing a means to see changes over time and comparing features from different sources. The sample data included consists of online news articles relating to COVID-19 that were published Douglas County, Kansas.""")
+st.markdown("""This site was built to facilitate computational exploration of text-based materials with a time component, providing a means to see changes over time and comparing features from different sources.""")
 
 st.markdown("""*Available tools include:*
 
@@ -29,7 +29,35 @@ st.markdown("""*Available tools include:*
 # placeholder for status updates
 placeholder = st.empty()
 
-st.markdown("Pick a sample dataset to get started.")
+st.markdown("### Pick a sample dataset to get started")
+datapick_cols = st.columns(3)
+with datapick_cols[0]:
+    with st.container():
+        st.info('News articles')
+        st.write('3,804 online news articles relating to COVID-19 that were published Douglas County, Kansas between January 28, 2020 and January 31, 2022.')
+        if st.button('Select', key='datapick_ljw'):
+            state.init_data = 'ljw'
+            state.init = False
+            getdata.init_data()
+with datapick_cols[1]:
+    with st.container():
+        st.info('Shakespeare plays')
+        st.write("A formatted dataset of all of Shakespeare's plays, as described [here](https://www.kaggle.com/datasets/kingburrito666/shakespeare-plays).")
+        if st.button('Select', key='datapick_shak'):
+            state.init_data = 'shak'
+            state.init = False
+            getdata.init_data()
+with datapick_cols[2]:
+    with st.container():
+        st.info('Use your own content')
+        st.write('Upload your own dataset')
+        if st.button('Select', key='datapick_ul'):
+            state.init_data = 'ul'
+
+# getdata.init_data()
+if 'init_data' in state:
+    st.write(state.init_data)
+    st.write(state.df.head())
 
 placeholder.markdown('*. . . Initializing . . .*\n\n')
 placeholder.empty()

@@ -57,7 +57,7 @@ def plot_terms_by_month(df, searchterm):
     fig_abs = go.Figure()
     fig_norm = go.Figure()
 
-    d_df = df.groupby('cleandate')
+    d_df = df[~(df.clean_text.isnull()) & ~(df.lemmas.isnull())].groupby('cleandate')
     timeframe = [getdata.get_cleandate(g.iloc[0].date) for n,g in d_df]
     kw_df = pd.DataFrame({'date':timeframe})
 

@@ -195,23 +195,25 @@ def preprocess(df, _nlp_placeholder):
 @st.experimental_memo
 def get_data(current_csv, tk_js):
 
-    with open(tk_js) as f:
-        data = json.load(f)
-        tokenizer = tokenizer_from_json(data)
-
     # set data source and open as dataframe
     df = pd.read_csv(current_csv, na_filter= False, parse_dates=['date'])
+    df = df[[c for c in df.columns if 'Unnamed' not in c]]
     df[['source','full_text','label']].applymap(lambda x: x.encode('utf-8').decode('ascii', 'ignore'))
 
-    try:
-        for c in ['label','full_text','clean_text','lemmas']:
-           df[c] = df[c].apply(literal_eval)
-           df[c] = df[c].apply(lambda x: tokenizer.sequences_to_texts([x])[0])
-    except:
-        pass
+    if tk_js != None:
+        with open(tk_js) as f:
+            data = json.load(f)
+            tokenizer = tokenizer_from_json(data)
+        try:
+            for c in ['label','full_text','clean_text','lemmas']:
+               df[c] = df[c].apply(literal_eval)
+               df[c] = df[c].apply(lambda x: tokenizer.sequences_to_texts([x])[0])
+        except:
+            pass
 
-    sourcenames = {'LJW':'Lawrence Journal-World','UDK':'University Daily Kansan'}
-    df.source = df.source.apply(lambda x: sourcenames.get(x) if x in sourcenames else x)
+    if state.init_data == 'ljw':
+        sourcenames = {'LJW':'Lawrence Journal-World','UDK':'University Daily Kansan'}
+        df.source = df.source.apply(lambda x: sourcenames.get(x) if x in sourcenames else x)
 
     return df
 
@@ -230,13 +232,18 @@ def default_vals():
 def init_data():
 
     # # if data already exists, skip the rest
-    if 'init' in state:
+    if 'init' in state and state.init == True:
         return
 
     # set input data files
-    current_csv = 'data/ljw.csv'
-    tk_js = 'data/tokenizer.json'
-    state.date_access = 'Month'
+    if 'init_data' not in state or state.init_data == 'ljw':
+        current_csv = 'data/ljw.csv'
+        tk_js = 'data/tokenizer.json'
+        state.date_access = 'Month'
+    elif state.init_data == 'shak':
+        current_csv = 'data/shakespearePlays.csv'
+        tk_js = None
+        state.date_access = 'Year'
 
     # placeholder for status updates
     loading = st.empty()
