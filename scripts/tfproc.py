@@ -137,3 +137,93 @@ def get_tfidf(df, tf):
     weights_df.set_index('term', inplace=True)
 
     return weights_df.head(10), tf
+
+def tf_form(tf):
+
+    n = int(tf['name'][-1])
+    # form to allow user input
+    with st.form(key=f'tf{n}_form'):
+
+        tf['kwd'] = st.selectbox('Term frequency vs. TF-IDF rankings',['Terms','TF-IDF'], key=f'tf{n}kwd', index=0)
+        # Note: have omitted 'Keywords' from the above list due to excessive processing times
+
+        daterange = state.daterange
+        df = state.df_filtered
+
+        tf['date_start'] = st.selectbox('Start date', daterange, index=0)
+        tf['date_end'] = st.selectbox('End date', daterange, index=len(daterange)-1)
+
+        sources = list(df.source.unique())
+        tf['source'] =  st.multiselect('Source(s) (leave blank to select all)',
+            sources,key=f'tfs{n}',default=sources[0])
+
+        # tf['source'] = st.multiselect('Source(s)',sources,key=f'tfs{n}',default=sources[1])
+        tf['ngram'] = st.selectbox('Ngrams',[1,2,3],key=f'tfng{n}', index=n-1)
+        tf['omit'] = st.text_input('Terms to omit from the results (separated by a comma)',key=f'tfmin{n}')
+
+        tf_submit_button = st.form_submit_button(label='Update search')
+
+        return tf, tf_submit_button
+
+# plot most frequent by month
+def plot_tf_month(t_df, tf, df):
+
+    class_df, tf, omit = filter_df(df, tf)
+
+    fig = go.Figure()
+
+    d_df = class_df[~(class_df.clean_text.isnull()) & ~(class_df.lemmas.isnull())].groupby('cleandate')
+    timeframe = [g.iloc[0].cleandate for n,g in d_df]
+    kw_df = pd.DataFrame({'date':timeframe})
+
+    topterms = [i for i,r in t_df[:5].iterrows() if i not in omit]
+    for term in topterms:
+
+        total_uses = ' '.join(['' if isinstance(x, float) else x for x in class_df.clean_text]).count(term)
+        kwsearch = [' '.join(g.clean_text).count(term) for n,g in d_df]
+
+        # add to graph
+        fig.add_trace(go.Scatter(x=timeframe, y=kwsearch,
+                        name=f'{term} ({total_uses:,} total uses)', text=kwsearch,
+                        line_shape='spline'))
+
+    return fig
+
+def tf_results(tf):
+
+    df = state.df_filtered
+
+    try:
+        if tf['kwd'] == 'Terms':
+            t_df, tf = get_tf(df, tf)
+        elif tf['kwd'] == 'TF-IDF':
+            t_df, tf = get_tfidf(df, tf)
+        elif tf1['kwd'] == 'Keywords':
+            t_df, tf = get_rake(df, tf)
+
+
+        tfres_tabs1, tfres_tabs2, tfres_tabs3 = st.tabs(('Word cloud','Table view','Time chart'))
+        # table
+        st.markdown(results_title(tf))
+
+        with tfres_tabs1:
+
+            st.write('*Top 200 terms*')
+            # wordcloud
+            wc = get_wc(tf)
+            st.pyplot(wc)
+
+        with tfres_tabs2:
+
+            st.write('*Top ten terms and frequency count*')
+            st.table(t_df)
+
+        with tfres_tabs3:
+
+            st.write('*Top five terms plotted over time*')
+            # graph
+            st.plotly_chart(plot_tf_month(t_df, tf, df), use_container_width=True)
+
+    except ValueError as ve:
+        st.write('There are no results from this search')
+        st.write(ve)

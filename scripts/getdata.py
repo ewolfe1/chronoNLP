@@ -211,7 +211,7 @@ def get_data(current_csv, tk_js):
         except:
             pass
 
-    if state.init_data == 'ljw':
+    if 'init_data' in state and state.init_data == 'ljw':
         sourcenames = {'LJW':'Lawrence Journal-World','UDK':'University Daily Kansan'}
         df.source = df.source.apply(lambda x: sourcenames.get(x) if x in sourcenames else x)
 
@@ -249,13 +249,8 @@ def init_data():
     loading = st.empty()
     loading.markdown('***Loading data. Please wait***')
 
-    placeholder = st.empty()
-    placeholder.markdown('*. . . Initializing . . .*\n\n')
-
     # configure data range and filter data
     df = get_data(current_csv, tk_js)
-
-    placeholder.markdown('*. . . Pre-processing data . . .*\n\n')
 
     # update dates
     df['date'] = df['date'].apply(lambda x: parse_date(x))
@@ -273,7 +268,6 @@ def init_data():
     default_vals()
 
     loading.empty()
-    placeholder.empty()
 
     state.init = True
     return

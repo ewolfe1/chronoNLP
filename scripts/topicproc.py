@@ -80,7 +80,9 @@ def topics_by_month(lda_model, topic_df, ta_abs_btn):
         if ta_abs_btn == 'Absolute':
             for c in g[[c for c in g.columns if str(c).isdigit()]]:
                 data[c] = g[c].agg(sum)
-                sizemin=3
+                # data[c] = g[c].apply(lambda x: x.sum())
+
+                sizemin=4
         else:
             for c in g[[c for c in g.columns if str(c).isdigit()]]:
                 data[c] = g[c].agg(sum) / len(g)
@@ -89,14 +91,18 @@ def topics_by_month(lda_model, topic_df, ta_abs_btn):
         t_df = pd.concat([t_df, pd.DataFrame([data])])
 
     t_df = t_df.sort_values('month')
+    maxval = t_df[[c for c in t_df.columns if str(c).isdigit()]].max(axis=1).max(axis=0)
 
     for topic_num in t_df[[c for c in t_df.columns if str(c).isdigit()]]:
+
+        maxsize = t_df[topic_num].apply(lambda x: x/maxval*100)
         kwds = ', '.join([lda_model.id2word[t[0]] for t in lda_model.get_topic_terms(topic_num)])
         fig.add_trace(go.Scatter(x=t_df.month.tolist(), y=t_df[topic_num],
                 mode='markers',marker=dict(
-                                 size=t_df[topic_num],
+                                 size=maxsize,
                                  sizemin=sizemin),
-                                 name=f'Topic {topic_num + 1} - {kwds}'))
+                                 name=f'Topic {topic_num + 1} - {kwds}',
+                                 line_shape='spline'))
         fig.update_layout(legend=dict(yanchor="top", y=-0.1, xanchor="left", x=0, itemsizing='constant'))
         fig.update_layout(height=700)
 
@@ -110,11 +116,12 @@ def plot_coherence(coherence_df):
     fig = make_subplots(specs=[[{"secondary_y": True}]], x_title='Number of topics')
 
     fig.add_trace(go.Scatter(x=coherence_df.index, y=coherence_df['Coherence'],
-                            mode='lines',name='Coherence'))
+                            mode='lines',name='Coherence',
+                            line_shape='spline'))
     fig.update_yaxes(title_text="Coherence", secondary_y=False, showgrid=False)
 
     fig.add_trace(go.Scatter(x=coherence_df.index, y=coherence_df['Perplexity'],
-                            mode='lines', name='Perplexity'), secondary_y=True)
+                            mode='lines', name='Perplexity', line_shape='spline'), secondary_y=True)
     fig.update_yaxes(title_text="Perplexity", secondary_y=True, showgrid=False)
 
     return fig
