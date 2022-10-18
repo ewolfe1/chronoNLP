@@ -5,8 +5,8 @@ from datetime import datetime
 import plotly.graph_objs as go
 # import colorlover as cl
 # colors = cl.to_rgb(cl.scales['7']['qual']['Set2'])
-from scripts import saproc, getdata
-getdata.page_config()
+from scripts import tools, saproc, getdata
+tools.page_config()
 
 @st.cache
 def get_sa_markdown(sa_btn):

@@ -13,7 +13,7 @@ from nltk import FreqDist
 from textblob import TextBlob, Word
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
-from scripts import getdata
+from scripts import tools, getdata
 
 # wordcloud
 def get_wc(tf):
@@ -201,14 +201,12 @@ def tf_results(tf):
         elif tf1['kwd'] == 'Keywords':
             t_df, tf = get_rake(df, tf)
 
-
-        tfres_tabs1, tfres_tabs2, tfres_tabs3 = st.tabs(('Word cloud','Table view','Time chart'))
-        # table
         st.markdown(results_title(tf))
+        tfres_tabs1, tfres_tabs2, tfres_tabs3 = st.tabs(('Word cloud','Table view','Time chart'))
 
         with tfres_tabs1:
 
-            st.write('*Top 200 terms*')
+            st.write('*Top 200 terms, weighted by frequency*')
             # wordcloud
             wc = get_wc(tf)
             st.pyplot(wc)
@@ -216,6 +214,7 @@ def tf_results(tf):
         with tfres_tabs2:
 
             st.write('*Top ten terms and frequency count*')
+            # table
             st.table(t_df)
 
         with tfres_tabs3:

@@ -1,18 +1,6 @@
-# Using virtual environment to create local Streamlit application
+% Using virtual environment to create local Streamlit application
 
-## pyenv
-
-***https://realpython.com/intro-to-pyenv***
-
-$brew install pyenv  
-$brew install pyenv-virtualenv
-
-*Note that several of these libraries need Python 3.8 or earlier
-$pyenv virtualenv 3.8.13 pyenv
-
-
-
-## Venv
+# Venv
 
 *This method is also easier to use with Streamlit Sharing, as not all libraries are available in conda*
 
@@ -28,6 +16,8 @@ Load additional libraries (first run only, or if requirements change)
 
     $pip install -r requirements.txt
 
+    * Any issues? See Troubleshooting notes in requirements.txt
+
 **Run the app**
 
     $streamlit run app.py
@@ -40,7 +30,31 @@ Remove the environment
 
     $rm -r venv/
 
-## Conda
+## TROUBLESHOOTING
+
+Requires Python =<3.8 (as of Aug 2022, no tensorflow on PY3.9 or above)
+
+See requirements.txt to make sure you have the right version of tensorflow installed.
+
+M1 Mac: If hypy (dependency of some libraries) fails, may need to run the following:
+
+    export HDF5_DIR=/opt/homebrew/Cellar/hdf5/[VERSION]
+    pip install h5py
+    pip install -r requirements.txt
+
+M1 Mac: if grpcio fails, try the following
+
+    export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
+    export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
+    pip install -r requirements.txt
+
+Problems with installing tensorflow factories (e.g. spacytextblob)? You may need a Rust compiler (check carefully the error message), try this:
+
+    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+    source "$HOME/.cargo/env"
+
+
+# Conda [instructions may be incomplete]
 
 *Note: Conda seems to load and run app a bit faster than venv, but requires a few extra steps*  
 

@@ -13,8 +13,8 @@ import gensim
 import gensim.corpora as corpora
 from gensim.models import CoherenceModel
 
-from scripts import getdata, topicproc
-getdata.page_config()
+from scripts import tools, getdata, topicproc
+tools.page_config()
 
 # load data
 if 'init' not in state:
@@ -66,7 +66,7 @@ with st.form(key='topic_selection'):
 
         st.markdown('Select data display')
         ta_abs_btn = st.radio('', ['Absolute','Normalized'])
-        st.caption("'Absolute' will show the raw count of articles on that topic. 'Normalized' will show the relative proportion of that topic for a given month (scale is 0 to 1.0)")
+        st.caption("'Absolute' will show the raw count of articles on that topic. 'Normalized' will show the relative proportion of that topic for a given time (scale is 0 to 1.0)")
 
     with nt_cols[2]:
 

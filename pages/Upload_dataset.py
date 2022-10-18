@@ -5,8 +5,8 @@ import hashlib
 from time import sleep
 from io import StringIO
 from random import randint
-from scripts import getdata
-getdata.page_config()
+from scripts import tools, getdata
+tools.page_config()
 
 # def md5(bytes_data):
 #     hash_md5 = hashlib.md5()
@@ -16,6 +16,10 @@ getdata.page_config()
 def empty():
     ul_container.empty()
     sleep(0.01)
+
+def update_upload_step():
+    state.upload_step = 2
+
 
 def ul1():
     empty()
@@ -40,7 +44,7 @@ def ul1():
         if 'ul_key' not in state:
             state.ul_key = str(randint(1000, 100000000))
 
-        uploaded_file = st.file_uploader("Select a file", type=['csv'], accept_multiple_files=False, key=state.ul_key)
+        uploaded_file = st.file_uploader("Select a file", type=['csv','zip'], accept_multiple_files=False, key=state.ul_key)
 
         if uploaded_file is not None:
             state.uploaded_file = uploaded_file.name
@@ -52,6 +56,8 @@ def ul1():
                 st.markdown(f"Your dataset consists of {len(user_df):,} items with {len(user_df.columns)} elements.")
                 with st.expander('View a sample of your dataset'):
                     st.table(getdata.display_user_df(user_df))
+                    # st.button('Review and continue', on_click=update_upload_step, key=str(randint(1000, 100000000)))
+                    # state.upload_step = 2
 
                 if getdata.check_user_df():
 
@@ -82,8 +88,7 @@ def ul1():
 
                             st.success('Success! You can now use the tools on this site to explore your data.')
                 else:
-                    if st.button('Continue'):
-                        state.upload_step = 2
+                    st.button('Review and continue', on_click=update_upload_step, key=str(randint(1000, 100000000)))
 
 def ul2():
 
@@ -99,21 +104,45 @@ def ul2():
 
         procdata = st.empty()
 
+        # get index if column in df
+        def get_index(field):
+            if field[0] in user_df.columns:
+                idx = user_df.columns.tolist().index(field[0])
+            elif field[1] in user_df.columns:
+                idx = user_df.columns.tolist().index(field[1])
+            else:
+                idx = 0
+
+            if any(t in field for t in ['title','label','source']):
+                idx += 1
+            return idx
+
         with userform:
             st.markdown('To best use the features of this site, please help identify the elements in your data:')
             user_cols = st.columns(3)
 
             with user_cols[0]:
                 user_info = {}
-                user_info['label'] = st.selectbox('A single label for the item', user_df.columns.tolist() + ['No label'])
-                user_info['full_text'] = st.selectbox('Full text', user_df.columns)
-                user_info['uniqueID'] = st.selectbox('Unique Identifier', user_df.columns)
-                user_info['source'] = st.selectbox('Source', user_df.columns.tolist() + ['No source'])
+                user_info['label'] = st.selectbox('A single label for the item (optional, e.g., title)', ['No label'] + user_df.columns.tolist(), index=get_index(('label','title')))
+                user_info['full_text'] = st.selectbox('Full text (text to be analyzed)', user_df.columns, index=get_index(('full_text','text')))
+                user_info['uniqueID'] = st.selectbox('Unique Identifier', user_df.columns, index=get_index(('uniqueID','url')))
+                user_info['source'] = st.selectbox('Source (optional field to allow grouping, e.g., author, publisher)', ['No source'] + user_df.columns.tolist(), index=get_index(('source','')))
 
             with user_cols[1]:
-                user_info['date'] =  st.selectbox('Date', user_df.columns)
+                user_info['date'] =  st.selectbox('Date', user_df.columns, index=get_index(('date','year')))
+
+                # check date format
+                def check_date_format():
+                    date_sample = str(user_df.sample()['date'].values[0])
+                    if len(date_sample) in [6,7]:
+                        return 1
+                    elif len(date_sample) > 7:
+                        return 3
+                    else:
+                        return 0
+
                 state.date_format = st.selectbox('How is the date formatted?',
-                    ['Year only (4 digit)','Year, month (any order)','Year, month, day (day first)','Year, month, day (month first)','None of these'])
+                    ['Year only (4 digit)','Year, month (any order)','Year, month, day (day first)','Year, month, day (month first)','None of these'], index=check_date_format())
                 state.date_access = st.radio('How do you want to be able to group the dates?',['Year','Month','Day'], horizontal=True)
 
                 st.write(' ')
@@ -135,7 +164,7 @@ def ul2():
                 elif t_df[c].isnull().values.any():
                     t_df[c] = t_df[c].fillna(f'No {c}')
                     st.write(f"The field **{c}** is an optional field for your data. You have {t_df[c].isnull().sum()} empty values (of {len(t_df)} rows). These values have been auto-filled with the value 'No {c}'.")
-                    if st.button('Accept these changes and continue'):
+                    if st.button('Accept these changes and continue', key=str(randint(1000, 100000000))):
                         user_data_accepted = True
                 else:
                     user_data_accepted = True
@@ -153,10 +182,12 @@ def ul3():
         st.markdown('Please review this data and continue to preprocessing.')
 
         user_df = state.user_df
-        getdata.display_user_df(user_df)
+        st.table(getdata.display_user_df(user_df))
 
         st.warning('*Note that, depending on the size of the dataset, the preprocessing step may take quite some time but should only need to be done once per session. Processed data can be downloaded for later re-use and to avoid this step in the future.*')
 
+        if 'userdata' in state:
+            state.upload_step = 4
 #         st.markdown("""Preprocessing steps include:
 #
 # * Clean text - remove stopwords and punctuation. Convert to lower case.
@@ -166,24 +197,27 @@ def ul3():
 #         """)
 
         if st.button('Continue to preprocess'):
-            nlp_placeholder = st.empty()
 
-            user_df = getdata.preprocess(state.user_df, nlp_placeholder)
+            user_df = getdata.preprocess(state.user_df)
             daterange = getdata.get_daterange(user_df)
 
             getdata.set_user_data(user_df, daterange)
+            st.experimental_rerun()
 
             # nlp_placeholder.markdown('***Preprocessing complete***')
-            # state.upload_step == 4
-            empty()
-            with ul_container.container():
-                st.markdown('### Step 4 of 4 - Download processed data file')
-                st.markdown('Preprocessing complete. You can now use the tools on this site to explore your data.')
+def ul4():
 
-                getdata.display_user_df(state.df)
+    # state.upload_step == 4
+    empty()
+    with ul_container.container():
+        st.markdown('### Step 4 of 4 - Download processed data file')
+        st.success('Preprocessing complete. You can now use the tools on this site to explore your data.')
 
-                st.markdown('Download the processed data for later use and to avoid re-processing next time.')
-                st.download_button('Download CSV', user_df.to_csv(index=False), file_name=state.uploaded_file.replace('.csv','_PREPROCESSED.csv'))
+        st.table(getdata.display_user_df(state.df))
+
+        st.markdown('Download the processed data for later use and to avoid re-processing next time.')
+        st.download_button('Download CSV', state.df.to_csv(index=False), key=str(randint(1000, 100000000)),
+        file_name=state.uploaded_file.replace('.csv','_PREPROCESSED.csv'))
 
 st.markdown('## Upload and pre-process your data')
 
@@ -210,14 +244,5 @@ if state.upload_step == 2:
 if state.upload_step == 3:
     ul3()
 
-# if state.upload_step == 4:
-
-    # empty()
-    # with ul_container.container():
-    #     st.markdown('### Step 4 of 4 - Download processed data file')
-    #     st.markdown('Preprocessing complete. You can now use the tools on this site to explore your data.')
-    #
-    #     getdata.display_user_df(state.df)
-    #
-    #     st.markdown('Download the processed data for later use and to avoid re-processing next time.')
-    #     st.download_button('Download CSV', user_df.to_csv(index=False), file_name=uploaded_file.name.replace('.csv','_PREPROCESSED.csv'))
+if state.upload_step == 4:
+    ul4()

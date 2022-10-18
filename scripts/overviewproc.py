@@ -14,7 +14,7 @@ from wordcloud import WordCloud
 from ast import literal_eval
 import matplotlib.pyplot as plt
 
-from scripts import getdata
+from scripts import tools, getdata
 
 def items_by_source():
 
@@ -22,17 +22,19 @@ def items_by_source():
     fig = go.Figure()
 
     df = state.df_filtered
+    df.sort_values('date', ascending=False, inplace=True)
 
-    for source in df.source.unique():
+    for source in df.source.value_counts(ascending=True).keys():
         d_df = df[df.source==source].groupby('date')
 
         fig.add_trace(go.Bar(x=[getdata.get_cleandate(n) for n,g in d_df], y=d_df.count()['label'],
-                            name='{} - {:,} items'.format(source, d_df.count()['label'].sum())
+                            name='{} - {:,} items'.format(source, d_df.count()['label'].sum()),
+                            marker_color=(state.colors[list(df.source.unique()).index(source)])
             ))
 
     # Update layout
     fig.update_layout(barmode='stack', xaxis_tickangle=45,
-                      title='Distribution of items over time'
+                      title='Distribution of items over time',
                       )
     fig.update_traces(marker_line_width=0)
     fig.update_yaxes(title_text="Items")
@@ -56,26 +58,25 @@ def get_tech_details():
         info['Grade level'] = f'{round(gl.mean(),2)} ({round(max(gl),2)} high, {round(min(gl),2)} low)'
         info['Number of items'] = str(len(g))
         info['Average length'] = f"{int(len(' '.join(g['full_text']).split()) / len(g))} words"
-        # info['Earliest'] = datetime.strftime(g.date.min(),'%Y-%m-%d')
-        # info['Most recent'] = datetime.strftime(g.date.max(),'%Y-%m-%d')
         info['Earliest'] = getdata.format_dates(g.cleandate.min())
         info['Most recent'] = getdata.format_dates(g.cleandate.max())
-
-        # tech_df = tech_df.append(info, ignore_index=True)
         tech_df = pd.concat([tech_df, pd.DataFrame([info])])
 
     tech_df['Number of items'] = tech_df['Number of items'].astype(int)
     tech_df.sort_values(by=['Number of items'], ascending=False, inplace=True)
     tech_df.set_index('Source', inplace=True)
     tech_df = tech_df.reindex(columns=['Number of items','Earliest','Most recent','Average length','Readability score','Grade level'])
-    return tech_df
+    return tech_df.style.format()
 
 def text_features():
 
     df = state.df_filtered
     # break pos into separate df for eval
     df_pos = df[['date','cleandate','pos_all']].copy()
-    df_pos['pos_all'] = df_pos['pos_all'].apply(literal_eval)
+    try:
+        df_pos['pos_all'] = df_pos['pos_all'].apply(literal_eval)
+    except:
+        pass
     df_pos = df_pos.set_index(['date','cleandate']).apply(lambda x: x.explode()).reset_index()
     df_pos['token'] = df_pos['pos_all'].apply(lambda x: None if isinstance(x, float) else x[0].lower())
     df_pos['pos'] = df_pos['pos_all'].apply(lambda x: None if isinstance(x, float) else x[1])

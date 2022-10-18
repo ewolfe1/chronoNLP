@@ -3,12 +3,12 @@ state = st.session_state
 import pandas as pd
 import numpy as np
 from natsort import natsorted
-from scripts import tfproc
+from scripts import tools, tfproc
 import textblob
 import subprocess
 import sys
-from scripts import getdata, tfproc
-getdata.page_config()
+from scripts import tools, getdata, tfproc
+tools.page_config()
 
 @st.cache
 def tb_corpora():

@@ -1,8 +1,8 @@
-import streamlit as st 
+import streamlit as st
 state = st.session_state
 import pandas as pd
-from scripts import getdata, topicproc
-getdata.page_config()
+from scripts import tools, getdata, topicproc
+tools.page_config()
 
 # load data
 if 'init' not in state:
@@ -19,8 +19,8 @@ df = state.df
 daterange = state.daterange
 df_filtered = state.df_filtered
 
-st.write('**Original dataset**')
-st.write(f"*Original dataset includes **{len(df):,} items** from **{len(df.source.unique())} sources** ({df['cleandate'].min()} - {df['cleandate'].max()})*")
+st.write(f"""The original dataset includes **{len(df):,} items** from **{len(df.source.unique())} sources** ({df['cleandate'].min()} - {df['cleandate'].max()}).
+Use these filters to review any subset of the data that you wish. Note that filtered datasets can be exported for later review.""")
 
 with st.form(key='filter_data'):
 

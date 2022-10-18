@@ -1,4 +1,4 @@
-plotly==5.1.0
+wplotly==5.1.0
 watchdog
 streamlit
 streamlit-webrtc
@@ -15,26 +15,10 @@ scikit-learn
 textdescriptives==1.0.6
 numpy==1.23.0  # Sept 2022, later versions of numpy not compatible with tensorflow-macos==2.9.2
 
-# TROUBLESHOOTING
-# non- m1 Mac
+# Choose the correct tensorflow library
+# non- M1 Mac:
 # tensorflow
 
-# if hypy (dependency of some libraries) fails, may need to run the following:
-# export HDF5_DIR=/opt/homebrew/Cellar/hdf5/[VERSION]
-# pip install h5py
-# re-run pip install -r requirements.txt
-
-# m1 Mac - if grpcio fails, try the following
-# export GRPC_PYTHON_BUILD_SYSTEM_OPENSSL=1
-# export GRPC_PYTHON_BUILD_SYSTEM_ZLIB=1
-# re-run pip install -r requirements.txt
-
-# m1 Mac - requires Python =<3.8 (as of Aug 2022, no tensorflow on PY3.9 or above)
-# m1 Mac may require tensorflow via these libraries
+# M1 Mac:
 tensorflow-macos
 tensorflow-metal
-
-# problems with installing tensorflow factories (e.g. spacytextblob)?
-# you may need a Rust compiler (check carefully the error message), try this:
-# curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-# source "$HOME/.cargo/env"

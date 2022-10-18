@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import zipfile
 from natsort import natsorted
 from datetime import datetime
 from dateutil.parser import parse
@@ -9,21 +10,15 @@ import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
 from spacytextblob.spacytextblob import SpacyTextBlob
 import seaborn as sns
-
+import time
 import textdescriptives as td
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import json
 from tensorflow.keras.preprocessing.text import Tokenizer, tokenizer_from_json
 from ast import literal_eval
+from scripts import tools
 
-
-# set page configuration. Can only be set once per session and must be first st command called
-def page_config():
-
-    if 'config' not in state:
-        st.set_page_config(page_title='Text Explorer', page_icon=':newspaper:', layout='wide') #,initial_sidebar_state='collapsed')
-    state.config = True
 
 # load NLP model for spaCy
 @st.experimental_memo
@@ -125,8 +120,7 @@ def clean_tok(t):
     return t.strip().replace("’","'").replace(" - ","")
 
 # pre-processing texts (cleaning, lemmas, readability)
-@st.experimental_memo(suppress_st_warning=True)
-def preprocess(df, _nlp_placeholder):
+def preprocess(df):
 
     # check for already preprocessed data
     cols_to_check = ['clean_text','lemmas','grade_level','readability',
@@ -144,11 +138,11 @@ def preprocess(df, _nlp_placeholder):
 
     # processing count
     ct = 1
-    _nlp_placeholder = st.empty()
+    nlp_placeholder = st.empty()
 
     for i,r in df.iterrows():
 
-        _nlp_placeholder.markdown(f'Processing item {ct:,} of {len(df):,} ({int(ct/len(df)*100)}% complete)')
+        nlp_placeholder.markdown(f'Processing item {ct:,} of {len(df):,} ({int(ct/len(df)*100)}% complete)')
 
         if not r[cols_to_check].isnull().any():
             continue
@@ -184,10 +178,10 @@ def preprocess(df, _nlp_placeholder):
     df['date'] = df['date'].apply(lambda x: parse_date(x))
     df['cleandate'] = df['date'].apply(lambda x: get_cleandate(x))
 
-    _nlp_placeholder.markdown('*Gathering Sentiment analysis*')
+    nlp_placeholder.markdown('*Gathering Sentiment analysis*')
     df = get_sa(df)
 
-    _nlp_placeholder.markdown('*Text cleaning and lemmatization complete.*')
+    nlp_placeholder.markdown('*Text cleaning and lemmatization complete.*')
 
     return df
 
@@ -211,7 +205,7 @@ def get_data(current_csv, tk_js):
         except:
             pass
 
-    if 'init_data' in state and state.init_data == 'ljw':
+    if 'init_data' in state and state.init_data == 'douglas':
         sourcenames = {'LJW':'Lawrence Journal-World','UDK':'University Daily Kansan'}
         df.source = df.source.apply(lambda x: sourcenames.get(x) if x in sourcenames else x)
 
@@ -226,7 +220,7 @@ def default_vals():
     state.daterange_full = daterange
     state.start_date = daterange[0]
     state.end_date = daterange[-1]
-    state.colors = sns.color_palette(None, len(state.df.source.unique()))
+    state.colors = [c for c in sns.color_palette('Set2', len(state.df.source.unique())).as_hex()]
 
 # load default data when no data is present
 def init_data():
@@ -234,43 +228,68 @@ def init_data():
     # # if data already exists, skip the rest
     if 'init' in state and state.init == True:
         return
+    data_set = True
+    data_select = st.empty()
 
-    # set input data files
-    if 'init_data' not in state or state.init_data == 'ljw':
-        current_csv = 'data/ljw.csv'
-        tk_js = 'data/tokenizer.json'
-        state.date_access = 'Month'
-    elif state.init_data == 'shak':
-        current_csv = 'data/shakespearePlays.csv'
-        tk_js = None
-        state.date_access = 'Year'
+    # uncomment this block to undo default dataset
+    # # default data has not been set
+    # if 'init_data' not in state:
+    #
+    #     data_set = False
+    #
+    #     with data_select.container():
+    #         st.info("Default data has not been set. This may have been caused by reloading the page, which can cause the user's cache to be reset.")
+    #         data_info = st.empty()
+    #
+    #         for i in [5,4,3,2,1]:
+    #             data_info.warning(f"Returning you to the home page in {i} seconds.")
+    #             time.sleep(1)
+    #
+    #         tools.switch_page('Home')
 
-    # placeholder for status updates
-    loading = st.empty()
-    loading.markdown('***Loading data. Please wait***')
+    # comment out the next two lines to unde default dataset
+    state.init_data = 'douglas'
+    data_set = True
 
-    # configure data range and filter data
-    df = get_data(current_csv, tk_js)
+    if data_set == True:
 
-    # update dates
-    df['date'] = df['date'].apply(lambda x: parse_date(x))
-    df['cleandate'] = df['date'].apply(lambda x: get_cleandate(x))
+        data_select.empty()
+        # set input data files
+        if state.init_data == 'douglas':
+            current_csv = 'data/DouglasCoKs.csv'
+            tk_js = 'data/tokenizer.json'
+            state.date_access = 'Month'
+        elif state.init_data == 'placeholder':
+            current_csv = 'data/placeholder.csv'
+            tk_js = None
+            state.date_access = 'Year'
 
-    # leave as placeholder for preprocessing on the fly
-    # much quicker to do in advance (~5 min for 3,500 articles)
-    # df = getdata.preprocess(df)
+        # placeholder for status updates
+        loading = st.empty()
+        loading.markdown('***Loading data. Please wait***')
 
-    # sentiment analysis - ~ 30 seconds for 3,500 articles
-    df = get_sa(df)
+        # configure data range and filter data
+        df = get_data(current_csv, tk_js)
 
-    # set other default values for session_state
-    state.df = df
-    default_vals()
+        # update dates
+        df['date'] = df['date'].apply(lambda x: parse_date(x))
+        df['cleandate'] = df['date'].apply(lambda x: get_cleandate(x))
 
-    loading.empty()
+        # leave as placeholder for preprocessing on the fly
+        # much quicker to do in advance (~5 min for 3,500 articles)
+        # df = getdata.preprocess(df)
 
-    state.init = True
-    return
+        # sentiment analysis - ~ 30 seconds for 3,500 articles
+        df = get_sa(df)
+
+        # set other default values for session_state
+        state.df = df
+        default_vals()
+
+        loading.empty()
+
+        state.init = True
+        return True
 
 
 # display sample df
@@ -305,7 +324,7 @@ def set_user_data(df, daterange):
     state.start_date = daterange[0]
     state.end_date = daterange[-1]
     state.init = True
-    state.colors = sns.color_palette(None, len(df.source.unique()))
+    state.colors = [c for c in sns.color_palette('Set2', len(state.df.source.unique())).as_hex()]
 
 # display user-uploaded df
 def display_user_df(df):
@@ -323,15 +342,113 @@ def display_user_df(df):
 
     return t_df
 
+def read_zip(zf):
+
+    zipinfo = st.empty()
+    csv_inv = None
+    with zipfile.ZipFile(zf, "r") as z:
+        csvs = [fn for fn in z.namelist() if fn.endswith('.csv') and not fn.split('/')[-1].startswith('._')]
+        txts = [fn for fn in z.namelist() if fn.endswith('.txt') and not fn.split('/')[-1].startswith('._')]
+
+    with zipinfo.container():
+        st.info('Preparing ZIP file')
+
+        if len(csvs) == 0:
+            st.markdown(f'No CSV files were found in the ZIP file. Please check the contents and try again.')
+            csv_inv = None
+            st.stop()
+        if len(csvs) == 1:
+            csv_inv = csvs[0]
+            st.markdown(f'Found {len(txts)} TXT files in this ZIP file.')
+            st.markdown(f'Found one CSV file in the ZIP file. "{csv_inv}" will be used as the inventory.')
+        if len(csvs) > 1:
+            zcols = st.columns(2)
+            with zcols[0]:
+                st.markdown(f'Found {len(txts)} TXT files in this ZIP file.')
+                csv_inv = st.selectbox('The ZIP file contained more than one CSV file. Which one is the inventory?', [''] + csvs)
+
+        if csv_inv != None and csv_inv != '':
+            with zipfile.ZipFile(zf, "r") as z:
+                with z.open(csv_inv) as c:
+                    try:
+                        df = pd.read_csv(c)
+                        # drop empty columns and duplicates
+                        df.dropna(how='all', axis=1, inplace=True)
+                        df.drop_duplicates(inplace=True)
+                        st.write(f'Here is a sample of your inventory ({len(df):,} items). Please select the column that contains the filename. The other data will be mapped in the next step. Note that only entries that can be mapped to a txt file will be retained.')
+
+                        st.write(df.head(1))
+
+                        fn_cols = st.columns(2)
+                        with fn_cols[0]:
+                            # user id filename in df
+                            with st.form(key='zip_inv'):
+                                fn_column = st.selectbox('Choose a column that matches your filenames.', df.columns)
+                                fn_submit = st.form_submit_button('Go')
+
+                        if fn_submit:
+                            df[fn_column] = df[fn_column].apply(lambda x: '' if isinstance(x, float) else str(x))
+
+                            txtmatch = st.empty()
+                            ct, fail, dupe, success = 0,0,0,0
+
+                            # for each txt in the zip file, find matching entry in df
+                            df['full_text'] = None
+
+                            for t in txts:
+
+                                ct += 1
+                                txtmatch.write(f'Matching text files to inventory: {ct} of {len(txts)}')
+                                match = df.index[(df[fn_column]==t) | (df[fn_column]==t.replace('.txt',''))].tolist()
+
+                                if len(match) == 0:
+                                    st.error(f'No matching entry in the inventory for {t} - **skipped**')
+                                    fail += 1
+                                elif len(match) >1:
+                                    st.error(f'More than one matching entry in the inventory for {t} - **skipped**')
+                                    dupe += 1
+                                # only one match, read full text into df
+                                else:
+                                    try:
+                                        with z.open(t) as f:
+                                            full_text = (' '.join(z.read(t).decode('utf-8').split()))
+                                            df.at[match[0], 'full_text'] = full_text
+                                            success += 1
+                                    except:
+                                        print(f'File [{fn}] was not able to be read as a text file.')
+                                        fail += 1
+                                        continue
+                            st.write("#### Status report")
+                            st.write(f"""* Number of txt files in ZIP file:   **{len(txts):,}**
+* Inventory found:   **{csv_inv}**
+* Number of entries in the inventory:   **{len(df):,}**
+* Number of txt files matched to inventory:   **{success:,}**
+* Number of txt files not found in inventory:   **{fail:,}**
+* Number of txt files with multiple entries in inventory:   **{dupe:,}**
+* Number of entries in the inventory with no matching txt file:   **{len(df) - success:,}**
+                            """)
+
+                            # filter to only entries with a full_text entry
+                            df = df[~df.full_text.isnull()]
+                            return df
+
+                    except:
+                        # if csv can't be read as a df, error
+                        st.write('This CSV file cannot be read. Please check the contents and try again.')
+                        raise
+                        st.stop()
+
+
 # allow user upload (csv, excel, json)
 def user_upload(uploaded_file):
 
     if uploaded_file.type == 'text/csv':
         df = pd.read_csv(uploaded_file)
-
-        # return df.sample(100)
         return df
-
+    elif uploaded_file.type == 'application/zip':
+        df = read_zip(uploaded_file)
+        # return df.sample(30)
+        return df
     # elif uploaded_file.type == 'application/json':
     #     df = pd.read_json(uploaded_file)
     #     # return df.sample(30)

@@ -1,7 +1,12 @@
 import streamlit as st
 state = st.session_state
-from scripts import getdata
-getdata.page_config()
+
+#--- I don't understand the necessity of this line. But it is needed
+#    to preserve session_state in the cloud. Not locally.
+# st.session_state.update(st.session_state)
+
+from scripts import tools, getdata
+tools.page_config()
 
 # hack for styling - may be deprecated in future
 st.write("""<style>
@@ -29,34 +34,38 @@ st.markdown("""*Available tools include:*
 # placeholder for status updates
 placeholder = st.empty()
 
+
 st.markdown("### Pick a sample dataset to get started")
 datapick_cols = st.columns(3)
 with datapick_cols[0]:
     with st.container():
         st.info('News articles')
         st.write('3,804 online news articles relating to COVID-19 that were published Douglas County, Kansas between January 28, 2020 and January 31, 2022.')
-        if st.button('Select', key='datapick_ljw'):
-            state.init_data = 'ljw'
+        if st.button('Select', key='datapick_douglas'):
+            state.init_data = 'douglas'
             state.init = False
             getdata.init_data()
 with datapick_cols[1]:
     with st.container():
-        st.info('Shakespeare plays')
-        st.write("A formatted dataset of all of Shakespeare's plays, as described [here](https://www.kaggle.com/datasets/kingburrito666/shakespeare-plays).")
-        if st.button('Select', key='datapick_shak'):
-            state.init_data = 'shak'
+        st.info('Placeholder')
+        st.write("Placeholder")
+        if st.button('Select', key='placeholder'):
+            # state.init_data = 'placeholder'
             state.init = False
-            getdata.init_data()
+            # getdata.init_data()
 with datapick_cols[2]:
     with st.container():
         st.info('Use your own content')
         st.write('Upload your own dataset')
         if st.button('Select', key='datapick_ul'):
             state.init_data = 'ul'
+            tools.switch_page('Upload_dataset')
 
 # getdata.init_data()
 if 'init_data' in state:
-    st.write('### Sample data')
-    st.write(state.df.head())
+    with st.expander('View a sample of the selected data'):
+        st.write('')
+        st.write(f"You've selected a sample dataset with a total of {len(state.df):,} articles by {len(state.df.source.unique())} publishers. *See the Data Overview page for more details about this dataset.*")
+        st.write(state.df[['uniqueID','date','full_text','source','label']].sample(5))
 
 placeholder.empty()
