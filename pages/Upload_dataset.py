@@ -188,13 +188,6 @@ def ul3():
 
         if 'userdata' in state:
             state.upload_step = 4
-#         st.markdown("""Preprocessing steps include:
-#
-# * Clean text - remove stopwords and punctuation. Convert to lower case.
-# * Create lemmas from clean text.
-# * Sentiment analysis of the text.
-# * Evaluate readability.
-#         """)
 
         if st.button('Continue to preprocess'):
 
@@ -202,9 +195,8 @@ def ul3():
             daterange = getdata.get_daterange(user_df)
 
             getdata.set_user_data(user_df, daterange)
-            st.experimental_rerun() 
+            st.experimental_rerun()
 
-            # nlp_placeholder.markdown('***Preprocessing complete***')
 def ul4():
 
     # state.upload_step == 4

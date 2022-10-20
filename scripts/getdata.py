@@ -12,8 +12,6 @@ from spacytextblob.spacytextblob import SpacyTextBlob
 import seaborn as sns
 import time
 import textdescriptives as td
-import nltk
-from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import json
 from tensorflow.keras.preprocessing.text import Tokenizer, tokenizer_from_json
 from ast import literal_eval
@@ -70,25 +68,6 @@ def df_summary_header():
     df = state.df_filtered
     daterange = state.daterange
     st.write(f'*Working dataset includes **{len(df):,} items** from **{len(df.source.unique())} sources** ({daterange[0]} - {daterange[-1]})*')
-
-# sentiment analysis
-@st.experimental_memo
-def get_sa(df):
-
-    nltk.download('vader_lexicon')
-    analyzer = SentimentIntensityAnalyzer()
-
-    def return_sa(text):
-        try:
-            return analyzer.polarity_scores(text)['compound']
-        except AttributeError:
-            return None
-
-    # compound is weighted average; other measures are neg, neu, pos
-    df['compound'] = df['full_text'].apply(lambda x: return_sa(x))
-    df['label_compound'] = df['label'].apply(lambda x: return_sa(x))
-
-    return df
 
 # format date based on user preference
 def get_cleandate(x):
@@ -177,9 +156,6 @@ def preprocess(df):
     # update dates
     df['date'] = df['date'].apply(lambda x: parse_date(x))
     df['cleandate'] = df['date'].apply(lambda x: get_cleandate(x))
-
-    nlp_placeholder.markdown('*Gathering Sentiment analysis*')
-    df = get_sa(df)
 
     nlp_placeholder.markdown('*Text cleaning and lemmatization complete.*')
 
@@ -278,9 +254,6 @@ def init_data():
         # leave as placeholder for preprocessing on the fly
         # much quicker to do in advance (~5 min for 3,500 articles)
         # df = getdata.preprocess(df)
-
-        # sentiment analysis - ~ 30 seconds for 3,500 articles
-        df = get_sa(df)
 
         # set other default values for session_state
         state.df = df

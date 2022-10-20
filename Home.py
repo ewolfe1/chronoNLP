@@ -26,7 +26,6 @@ st.markdown("""*Available tools include:*
 * A simple interface to adjust the date range or source(s) analyzed
 * Detailed summary of the data, including distribution over time and by source
 * Full text searching of the data, plotting the results by frequency over time and by source
-* Sentiment analysis of the data, showing the mean sentiment over time and by source
 * Computationally derived term frequency analysis, allowing a highly customizable means to view statistically significant n-grams used in the texts
 * Topic modeling, with a means to see the weighted distribution of algorithmically derived topics over time
 * An interface to allow user-uploaded datasets with a time component""")
