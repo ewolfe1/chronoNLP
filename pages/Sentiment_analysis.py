@@ -33,7 +33,7 @@ getdata.df_summary_header()
 placeholder.markdown('*. . . Visualizing data . . .*\n\n')
 
 # sect 1
-sent_btn = st.radio('', ['Article Text','Headline'], horizontal=True)
+sent_btn = st.radio('Sentiment target', ['Article Text','Headline'], horizontal=True, label_visibility="hidden")
 if sent_btn == 'Article Text':
     sent_query = 'compound'
 else:

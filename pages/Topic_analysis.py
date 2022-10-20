@@ -65,7 +65,7 @@ with st.form(key='topic_selection'):
     with nt_cols[1]:
 
         st.markdown('Select data display')
-        ta_abs_btn = st.radio('', ['Absolute','Normalized'])
+        ta_abs_btn = st.radio('Data display method', ['Absolute','Normalized'], label_visibility="hidden")
         st.caption("'Absolute' will show the raw count of articles on that topic. 'Normalized' will show the relative proportion of that topic for a given time (scale is 0 to 1.0)")
 
     with nt_cols[2]:

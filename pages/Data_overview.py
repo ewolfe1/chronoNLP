@@ -27,8 +27,8 @@ if ready:
 
     st.plotly_chart(overviewproc.items_by_source(), use_container_width=True)
 
-    st.write('### Analyis of items by source')
-    st.table(overviewproc.get_tech_details())
+    st.write('### Analysis of items by source')
+    st.dataframe(overviewproc.get_tech_details(), use_container_width=True)
 
     st.write('### Textual characteristics of the dataset')
     tc_placeholder = st.empty()

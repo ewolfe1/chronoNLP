@@ -4,8 +4,6 @@
 __pycache__/
 .ipynb_checkpoints/
 zOld/
-data/us-counties.csv
-data/us-counties-full.csv
 *_old.csv
 venv/
 *.ipynb

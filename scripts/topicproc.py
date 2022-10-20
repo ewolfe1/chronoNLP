@@ -116,12 +116,12 @@ def plot_coherence(coherence_df):
     fig = make_subplots(specs=[[{"secondary_y": True}]], x_title='Number of topics')
 
     fig.add_trace(go.Scatter(x=coherence_df.index, y=coherence_df['Coherence'],
-                            mode='lines',name='Coherence',
+                            mode='lines+markers', connectgaps=True,name='Coherence',
                             line_shape='spline'))
     fig.update_yaxes(title_text="Coherence", secondary_y=False, showgrid=False)
 
     fig.add_trace(go.Scatter(x=coherence_df.index, y=coherence_df['Perplexity'],
-                            mode='lines', name='Perplexity', line_shape='spline'), secondary_y=True)
+                            mode='lines+markers', connectgaps=True, name='Perplexity', line_shape='spline'), secondary_y=True)
     fig.update_yaxes(title_text="Perplexity", secondary_y=True, showgrid=False)
 
     return fig

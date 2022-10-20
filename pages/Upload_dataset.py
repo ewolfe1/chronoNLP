@@ -202,7 +202,7 @@ def ul3():
             daterange = getdata.get_daterange(user_df)
 
             getdata.set_user_data(user_df, daterange)
-            st.experimental_rerun()
+            st.experimental_rerun() 
 
             # nlp_placeholder.markdown('***Preprocessing complete***')
 def ul4():

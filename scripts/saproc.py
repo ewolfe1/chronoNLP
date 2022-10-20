@@ -16,7 +16,7 @@ def get_topic_plot(df, sent_query):
 
     # sum of all sources
     fig.add_trace(go.Scatter(x=[n for n,g in d_df], y=sents,
-                    name='All', mode='lines', line_shape='spline',line_smoothing=.2,
+                    name='All', mode='lines+markers', connectgaps=True, line_shape='spline',line_smoothing=.2,
                      marker_color='black'
             ))
 
@@ -27,7 +27,7 @@ def get_topic_plot(df, sent_query):
         sents = [g[sent_query].mean() for n,g in d_df]
 
         fig.add_trace(go.Scatter(x=[n for n,g in d_df], y=sents,
-                        name=source, mode='lines', line_shape='spline',line_smoothing=.2,
+                        name=source, mode='lines+markers', connectgaps=True, line_shape='spline',line_smoothing=.2,
                          marker_color=(state.colors[list(df.source.unique()).index(source)])))
 
     fig.update_layout(yaxis_range=['-1.05','1.05'])
@@ -66,7 +66,7 @@ def plot_sa_multiterm(df, searchterm_multi, sent_query):
 
         # sum of all sources
         fig.add_trace(go.Scatter(x=[n for n,g in d_df], y=sents,
-                        name=term, mode='lines', line_shape='spline',line_smoothing=.2
+                        name=term, mode='lines+markers', connectgaps=True, line_shape='spline',line_smoothing=.2
                          #marker_color=(state.colors[searchterm_multi.split(',').index(term)])
                 ))
 

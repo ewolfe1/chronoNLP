@@ -46,6 +46,7 @@ def get_tech_details():
 
     df = state.df_filtered
     tech_df = pd.DataFrame()
+    df['count'] = df.full_text.apply(lambda x: len(x.split()))
 
     for n,g in df.groupby('source'):
 
@@ -56,8 +57,10 @@ def get_tech_details():
         info['Source'] = n
         info['Readability score'] = f'{round(rd.mean(),2)} ({round(max(rd),2)} high, {round(min(rd),2)} low)'
         info['Grade level'] = f'{round(gl.mean(),2)} ({round(max(gl),2)} high, {round(min(gl),2)} low)'
-        info['Number of items'] = str(len(g))
-        info['Average length'] = f"{int(len(' '.join(g['full_text']).split()) / len(g))} words"
+        info['Number of items'] = len(g)
+        info['Average length'] = f"{int(len(' '.join(g['full_text']).split()) / len(g)):,} words"
+        info['Longest'] = f"{g.nlargest(1, ['count'])['count'].values[0]:,} words"
+        info['Shortest'] = f"{g.nsmallest(1, ['count'])['count'].values[0]:,} words"
         info['Earliest'] = getdata.format_dates(g.cleandate.min())
         info['Most recent'] = getdata.format_dates(g.cleandate.max())
         tech_df = pd.concat([tech_df, pd.DataFrame([info])])
@@ -65,8 +68,8 @@ def get_tech_details():
     tech_df['Number of items'] = tech_df['Number of items'].astype(int)
     tech_df.sort_values(by=['Number of items'], ascending=False, inplace=True)
     tech_df.set_index('Source', inplace=True)
-    tech_df = tech_df.reindex(columns=['Number of items','Earliest','Most recent','Average length','Readability score','Grade level'])
-    return tech_df.style.format()
+    tech_df = tech_df.reindex(columns=['Number of items','Earliest','Most recent','Average length','Longest','Shortest','Readability score','Grade level'])
+    return tech_df.style.format({'Number of items':'{:,}'})
 
 def text_features():
 
