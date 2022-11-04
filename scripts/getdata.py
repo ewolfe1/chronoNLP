@@ -86,13 +86,13 @@ def parse_date(x):
         try:
             return parse(str(x), default=datetime(2022, 1, 1), dayfirst=True)
         except:
-            print('No Date or Invalid Date')
+            #print('No Date or Invalid Date')
             return None
     else:
         try:
             return parse(str(x), default=datetime(2022, 1, 1))
         except:
-            print('No Date or Invalid Date')
+            #print('No Date or Invalid Date')
             return None
 
 def clean_tok(t):

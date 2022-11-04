@@ -150,28 +150,35 @@ def ul2():
 
         # sample data and confirm
         if user_submit:
-            user_data_accepted = False
+            changes, user_data_accepted = False, False
             t_df = user_df[list(set(v for k,v in user_info.items()))].copy()
             t_df.rename(columns = {v:k for k,v in user_info.items()}, inplace = True)
 
             for c in ['full_text','uniqueID','date']:
                 if t_df[c].isnull().values.any():
-                    st.write(f"The field **{c}** is required for all rows. You have {t_df[c].isnull().sum()} empty values (of {len(t_df)} rows). Please check your data and try again.")
-                    st.stop()
+                    st.write(f"The field **{c}** is required for all rows. You have {t_df[c].isnull().sum()} empty values (of {len(t_df)} rows). These rows have been automatically excluded from the data. To access all of the data, please check your data for missing fields and try again.")
+                    t_df = t_df[~t_df[c].isnull()]
+                    changes = True
+
             for c in ['label','source']:
                 if user_info[c] == f"No {c}":
                     t_df[c] = f"No {c}"
                 elif t_df[c].isnull().values.any():
                     t_df[c] = t_df[c].fillna(f'No {c}')
                     st.write(f"The field **{c}** is an optional field for your data. You have {t_df[c].isnull().sum()} empty values (of {len(t_df)} rows). These values have been auto-filled with the value 'No {c}'.")
-                    if st.button('Accept these changes and continue', key=str(randint(1000, 100000000))):
-                        user_data_accepted = True
-                else:
-                    user_data_accepted = True
+                    changes = True
 
-            if user_data_accepted:
+            if changes == True:
+                if st.button('Accept these changes and continue', key=str(randint(1000, 100000000))):
+                    state.user_df = t_df
+                    state.upload_step = 3
+            else:
                 state.user_df = t_df
                 state.upload_step = 3
+
+            # if user_data_accepted:
+            #     state.user_df = t_df
+            #     state.upload_step = 3
 
 def ul3():
 
@@ -207,9 +214,10 @@ def ul4():
 
         st.table(getdata.display_user_df(state.df))
 
-        st.markdown('Download the processed data for later use and to avoid re-processing next time.')
-        st.download_button('Download CSV', state.df.to_csv(index=False), key=str(randint(1000, 100000000)),
-        file_name=state.uploaded_file.replace('.csv','_PREPROCESSED.csv'))
+        with st.info('Download the processed data for later use and to avoid re-processing next time.'):
+        # st.markdown('Download the processed data for later use and to avoid re-processing next time.')
+            st.download_button('Download CSV', state.df.to_csv(index=False), key=str(randint(1000, 100000000)),
+            file_name=state.uploaded_file.replace('.csv','_PREPROCESSED.csv'))
 
 st.markdown('## Upload and pre-process your data')
 

@@ -73,16 +73,20 @@ if searchterm != '':
         #      file_name=f'keywords-{fn}.csv', mime='text/csv')
 
     # counts by source
+    indivsrc = st.empty()
     if len(df.source.unique()) > 1:
 
-        with st.expander('View plots by individual sources'):
+        # with st.expander('View plots by individual sources'):
+        if st.button('View plots by individual sources'):
 
-            # plot all terms
-            kwsearchproc.get_tabs(df, stlist, omit)
-            if len(stlist) > 1:
+            with indivsrc.container():
 
-                # plot individual terms
-                for term in stlist:
-                    kwsearchproc.get_tabs(df, term, omit)
+                # plot all terms
+                kwsearchproc.get_tabs(df, stlist, omit)
+                if len(stlist) > 1:
+
+                    # plot individual terms
+                    for term in stlist:
+                        kwsearchproc.get_tabs(df, term, omit)
 
 placeholder.empty()
