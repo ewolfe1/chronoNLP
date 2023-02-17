@@ -340,7 +340,7 @@ def read_zip(zf):
                 st.markdown(f'Found {len(txts)} TXT files in this ZIP file.')
                 csv_inv = st.selectbox('The ZIP file contained more than one CSV file. Which one is the inventory?', [''] + csvs)
 
-        if csv_inv != None and csv_inv != '':
+        if csv_inv not in [None, '']:
             with zipfile.ZipFile(zf, "r") as z:
                 with z.open(csv_inv) as c:
                     try:
@@ -363,42 +363,50 @@ def read_zip(zf):
                             df[fn_column] = df[fn_column].apply(lambda x: '' if isinstance(x, float) else str(x))
 
                             txtmatch = st.empty()
-                            ct, fail, dupe, success = 0,0,0,0
+                            success, fail = 0,0
 
                             # for each txt in the zip file, find matching entry in df
                             df['full_text'] = None
 
-                            for t in txts:
 
-                                ct += 1
-                                txtmatch.write(f'Matching text files to inventory: {ct} of {len(txts)}')
-                                match = df.index[(df[fn_column]==t) | (df[fn_column]==t.replace('.txt',''))].tolist()
-
-                                if len(match) == 0:
-                                    st.error(f'No matching entry in the inventory for {t} - **skipped**')
+                            for i,r in df.iterrows():
+                                try:
+                                    txt = [fn for fn in z.namelist() if r[fn_column] in fn][0]
+                                    df.at[i, 'full_text'] = ' '.join(z.read(txt).decode('utf-8').split())
+                                    success += 1
+                                except:
+                                    st.error(f'{r[fn_column]} is in the csv, but was not found in the zip file.')
                                     fail += 1
-                                elif len(match) >1:
-                                    st.error(f'More than one matching entry in the inventory for {t} - **skipped**')
-                                    dupe += 1
-                                # only one match, read full text into df
-                                else:
-                                    try:
-                                        with z.open(t) as f:
-                                            full_text = (' '.join(z.read(t).decode('utf-8').split()))
-                                            df.at[match[0], 'full_text'] = full_text
-                                            success += 1
-                                    except:
-                                        print(f'File [{fn}] was not able to be read as a text file.')
-                                        fail += 1
-                                        continue
+
+                            # for t in txts:
+                            #
+                            #     ct += 1
+                            #     txtmatch.write(f'Matching text files to inventory: {ct} of {len(txts)}')
+                            #     match = df.index[(df[fn_column]==t) | (df[fn_column]==t.replace('.txt',''))].tolist()
+                            #
+                            #     if len(match) == 0:
+                            #         st.error(f'No matching entry in the inventory for {t} - **skipped**')
+                            #         fail += 1
+                            #     elif len(match) >1:
+                            #         st.error(f'More than one matching entry in the inventory for {t} - **skipped**')
+                            #         dupe += 1
+                            #     # only one match, read full text into df
+                            #     else:
+                            #         try:
+                            #             with z.open(t) as f:
+                            #                 full_text = (' '.join(z.read(t).decode('utf-8').split()))
+                            #                 df.at[match[0], 'full_text'] = full_text
+                            #                 success += 1
+                            #         except:
+                            #             print(f'File [{fn}] was not able to be read as a text file.')
+                            #             fail += 1
+                            #             continue
                             st.write("#### Status report")
                             st.write(f"""* Number of txt files in ZIP file:   **{len(txts):,}**
 * Inventory found:   **{csv_inv}**
 * Number of entries in the inventory:   **{len(df):,}**
 * Number of txt files matched to inventory:   **{success:,}**
 * Number of txt files not found in inventory:   **{fail:,}**
-* Number of txt files with multiple entries in inventory:   **{dupe:,}**
-* Number of entries in the inventory with no matching txt file:   **{len(df) - success:,}**
                             """)
 
                             # filter to only entries with a full_text entry

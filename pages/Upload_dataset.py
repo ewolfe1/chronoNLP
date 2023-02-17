@@ -28,18 +28,52 @@ def ul1():
         st.markdown('### Step 1 of 4 - Upload data file')
 
         # allow user uploads of different datasets (CSV, JSON)
-        st.markdown('This site is designed to allow exploration of text documents with a time-based element. It optionally allows for texts from multiple sources.')
-        st.markdown('**Accepted formats:** CSV')
-        st.markdown("""
-    The follow are the elements that can be accessed in this site. ***Your data does not have to have these headings, as they can be mapped in the next step.***
+        st.markdown('This site is designed to allow exploration of text documents with a time-based element. Use this tool to upload your own data as a CSV or as a ZIP file of TXT files.')
+        st.markdown('**Accepted formats:** CSV, ZIP')
 
-    * **label** *- a label associated with each item (e.g. title of article, subject) - Optional*
-    * **full text** *- the actual text that will be analyzed - Required*
-    * **uniqueID** *- a unique identifier for each item in your dataset (e.g. URI, Volume/Issue number, filename) - Required*
-    * **source** *- an data point that can enable grouping (e.g. author, publisher) - Optional*
-    * **date** *- the date for each item to facilitate a time-based exploration of your data - Required*
+        with st.expander('View requirements for upload'):
+            st.markdown("""
+    The follow are the elements that can be accessed in this site.
+
+* **uniqueID** *- a unique identifier for each item in your dataset (e.g. URI, Volume/Issue number, filename) - **Required***
+* **full text** *- the actual text that will be analyzed - **Required***
+* **date** *- the date for each item to facilitate a time-based exploration of your data - **Required***
+* **label** *- a label associated with each item (e.g. title of article, subject) - Optional*
+* **source** *- an data point that can enable grouping (e.g. author, publisher) - Optional*
     """)
 
+            st.markdown('### CSV upload requirements')
+            st.markdown("""The CSV file must have at least three columns, as described above:
+
+* Unique identifier
+* Date
+* Full text""")
+            st.markdown("""The CSV file may also have two optional columns, as described above:
+
+* Label
+* Source""")
+            st.markdown("""Additional notes:
+
+* Your CSV file does not have to have these specific headings, as they will be mapped in the next step.
+* Any other columns will be ignored""")
+
+            st.markdown('### ZIP upload requirements')
+            st.markdown("""ZIP files containing text to be analyzed may be uploaded, with the following requirements:
+
+* All text files must be in TXT format
+* There must be an inventory, saved in CSV format""")
+            st.markdown("""The CSV must have at least two columns:
+
+* Filename - this can be the unique identifier and will be also used to map the full text for each entry
+* Date""")
+            st.markdown("""The CSV file may also have two optional columns, as described above:
+
+* Label
+* Source""")
+            st.markdown("""Additional notes:
+
+* Your CSV file does not have to have these specific headings, as they will be mapped in the next step.
+* Any other columns will be ignored""")
 
         if 'ul_key' not in state:
             state.ul_key = str(randint(1000, 100000000))
@@ -150,7 +184,9 @@ def ul2():
 
         # sample data and confirm
         if user_submit:
+
             changes, user_data_accepted = False, False
+
             t_df = user_df[list(set(v for k,v in user_info.items()))].copy()
             t_df.rename(columns = {v:k for k,v in user_info.items()}, inplace = True)
 
@@ -161,6 +197,10 @@ def ul2():
                     changes = True
 
             for c in ['label','source']:
+
+                if c not in t_df.columns and c in user_info:
+                    t_df[c] = user_df[user_info[c]]
+
                 if user_info[c] == f"No {c}":
                     t_df[c] = f"No {c}"
                 elif t_df[c].isnull().values.any():

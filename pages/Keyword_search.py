@@ -35,7 +35,8 @@ with kw_cols[1]:
 stlist = []
 if searchterm != '':
     searchterm = [t.strip().lower() for t in searchterm.split(',')]
-    st.write("***Search terms included in results:***")
+    st.write("""***Search terms included in results:***  
+    (*Note that only the first ten will be charted due to resource considerations.*)""")
     for t in searchterm:
         if '*' in t:
             matchdict = kwsearchproc.get_pattern(f'^{t}', ' '.join(df.clean_text), omit)
@@ -50,6 +51,9 @@ if searchterm != '':
             stlist.extend(natsorted([k for k,v in matchdict.items() if k in matchstr]))
         else:
             stlist.extend([t])
+
+    # Limit to first ten results. Can hang up if there are too many results to graph
+    stlist = stlist[:10]
 
     st.write('### Keyword frequency')
 
