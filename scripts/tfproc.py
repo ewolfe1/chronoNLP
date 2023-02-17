@@ -65,7 +65,7 @@ def filter_df(df, tf):
     return class_df, tf, omit
 
 # Term frequency
-@st.experimental_memo
+@st.cache_data
 def get_tf(df, tf):
 
     class_df, tf, omit = filter_df(df, tf)
@@ -83,7 +83,7 @@ def get_tf(df, tf):
     return common_df, tf
 
 # RAKE keywords
-@st.experimental_memo
+@st.cache_data
 def get_rake(df, tf):
 
     class_df, tf, omit = filter_df(df, tf)
@@ -114,7 +114,7 @@ def get_rake(df, tf):
     return rake_df.head(10), tf
 
 # TF-IDF
-@st.experimental_memo
+@st.cache_data
 def get_tfidf(df, tf):
 
     class_df, tf, omit = filter_df(df, tf)

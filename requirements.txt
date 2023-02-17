@@ -1,4 +1,4 @@
-wplotly==5.1.0
+plotly==5.1.0
 watchdog
 streamlit
 streamlit-webrtc

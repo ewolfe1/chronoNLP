@@ -16,7 +16,7 @@ if ready:
     # get source data
     placeholder.markdown('*. . . Initializing . . .*\n\n')
 
-    df_filtered =state.df_filtered
+    df_filtered = state.df_filtered
 
     # header
     st.subheader('Get an overview of the data')

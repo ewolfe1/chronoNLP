@@ -19,7 +19,7 @@ from scripts import tools
 
 
 # load NLP model for spaCy
-@st.experimental_memo
+@st.cache_resource
 def load_model():
 
     try:
@@ -162,7 +162,7 @@ def preprocess(df):
     return df
 
 # load default dataset
-@st.experimental_memo
+@st.cache_data
 def get_data(current_csv, tk_js):
 
     # set data source and open as dataframe
@@ -420,7 +420,8 @@ def read_zip(zf):
                         st.stop()
 
 
-# allow user upload (csv, excel, json)
+# allow user upload (csv or zip of txt files)
+@st.cache_data
 def user_upload(uploaded_file):
 
     if uploaded_file.type == 'text/csv':
@@ -428,12 +429,7 @@ def user_upload(uploaded_file):
         return df
     elif uploaded_file.type == 'application/zip':
         df = read_zip(uploaded_file)
-        # return df.sample(30)
         return df
-    # elif uploaded_file.type == 'application/json':
-    #     df = pd.read_json(uploaded_file)
-    #     # return df.sample(30)
-    #     return df
     else:
-        st.markdown(f"You uploaded {uploaded_file.name} -- Please upload in CSV format.")
+        st.markdown(f"You uploaded {uploaded_file.name} -- Please upload in CSV or ZIP format.")
         return None

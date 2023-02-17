@@ -19,7 +19,7 @@ st.write("""<style>
 
 
 
-st.markdown("""This site was built to facilitate computational exploration of text-based materials with a time component, providing a means to see changes over time and comparing features from different sources.""")
+st.markdown("""This site was built to help facilitate computational exploration of text-based materials with a time component, providing a means to see changes over time and comparing features from different sources.""")
 
 st.markdown("""*Available tools include:*
 

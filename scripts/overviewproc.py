@@ -22,12 +22,14 @@ def items_by_source():
     fig = go.Figure()
 
     df = state.df_filtered
-    df.sort_values('date', ascending=False, inplace=True)
+    df.sort_values('date', ascending=True, inplace=True)
 
-    for source in df.source.value_counts(ascending=True).keys():
+    # sorting this way to ensure label is sequential
+    # for source in df.source.value_counts(ascending=True).keys():
+    for source in df.source.tolist():
         d_df = df[df.source==source].groupby('date')
 
-        fig.add_trace(go.Bar(x=[getdata.get_cleandate(n) for n,g in d_df], y=d_df.count()['label'],
+        fig.add_trace(go.Bar(x=natsorted([getdata.get_cleandate(n) for n,g in d_df]), y=d_df.count()['label'],
                             name='{} - {:,} items'.format(source, d_df.count()['label'].sum()),
                             marker_color=(state.colors[list(df.source.unique()).index(source)])
             ))

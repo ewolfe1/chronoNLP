@@ -106,7 +106,7 @@ def sort_legend(legend_ct, fig):
     return ordered_legend
 
 # plot a single term across multiple sources
-@st.experimental_memo
+@@st.cache_resource
 def plot_term_by_source(df, term, omit):
 
     fig_abs = go.Figure()
@@ -152,7 +152,7 @@ def plot_term_by_source(df, term, omit):
     return fig_abs, fig_norm, None
 
 # plot multiple terms over time
-@st.experimental_memo
+@st.cache_resource
 def plot_terms_by_month(df, stlist, omit):
 
     fig_abs = go.Figure()

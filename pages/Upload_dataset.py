@@ -257,7 +257,7 @@ def ul4():
         with st.info('Download the processed data for later use and to avoid re-processing next time.'):
         # st.markdown('Download the processed data for later use and to avoid re-processing next time.')
             st.download_button('Download CSV', state.df.to_csv(index=False), key=str(randint(1000, 100000000)),
-            file_name=state.uploaded_file.replace('.csv','_PREPROCESSED.csv'))
+            file_name=state.uploaded_file.replace('.csv','_PREPROCESSED.csv').replace('.zip','_PREPROCESSED.csv'))
 
 st.markdown('## Upload and pre-process your data')
 
