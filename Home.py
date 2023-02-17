@@ -64,7 +64,7 @@ with datapick_cols[2]:
 if 'init_data' in state:
     with st.expander('View a sample of the selected data'):
         st.write('')
-        st.write(f"You've selected a sample dataset with a total of {len(state.df):,} articles by {len(state.df.source.unique())} publishers. *See the Data Overview page for more details about this dataset.*")
+        st.write(f"You've selected a sample dataset with a total of {len(state.df):,} articles by {len(state.df.source.unique())} publishers. See the *Data Overview* page for more details about this dataset.")
         st.write(state.df[['uniqueID','date','full_text','source','label']].sample(5))
 
 placeholder.empty()
