@@ -106,7 +106,7 @@ def sort_legend(legend_ct, fig):
     return ordered_legend
 
 # plot a single term across multiple sources
-@@st.cache_resource
+@st.cache_resource
 def plot_term_by_source(df, term, omit):
 
     fig_abs = go.Figure()
@@ -120,12 +120,13 @@ def plot_term_by_source(df, term, omit):
         num_articles = len(df[df.source==source])
 
         if type(term) == list:
-            kwsearch = [sum(kwd_count(t, ' '.join(g.clean_text), omit) for t in term) for n,g in d_df]
+            # kwsearch = [sum(kwd_count(t, ' '.join(g.clean_text), omit) for t in term) for n,g in d_df]
+            kwsearch = [sum(kwd_count(t, ' '.join(g.full_text.str.lower()), omit) for t in term) for n,g in d_df]
             kwsearch_norm = ([t/num_articles for t in kwsearch])
             total_uses = sum(kwsearch)
         else:
-
-            kwsearch = [kwd_count(term, ' '.join(g.clean_text), omit) for n,g in d_df]
+            # kwsearch = [kwd_count(term, ' '.join(g.clean_text), omit) for n,g in d_df]
+            kwsearch = [kwd_count(term, ' '.join(g.full_text.str.lower()), omit) for n,g in d_df]
             kwsearch_norm = ([t/num_articles for t in kwsearch])
             total_uses = sum(kwsearch)
 
@@ -158,7 +159,7 @@ def plot_terms_by_month(df, stlist, omit):
     fig_abs = go.Figure()
     fig_norm = go.Figure()
 
-    d_df = df[~(df.clean_text.isnull())].groupby('cleandate')
+    d_df = df[~(df.full_text.isnull())].groupby('cleandate')
     timeframe = [getdata.get_cleandate(g.iloc[0].date) for n,g in d_df]
     kw_df = pd.DataFrame({'date':timeframe})
     legend_ct = {}
@@ -166,12 +167,12 @@ def plot_terms_by_month(df, stlist, omit):
 
     for term in stlist:
 
-        total_uses = kwd_count(term, ' '.join(df.clean_text), omit)
+        total_uses = kwd_count(term, ' '.join(df.full_text), omit)
         if total_uses == 0:
             continue
 
-        kwsearch_abs = [kwd_count(term, ' '.join(g.clean_text), omit) for n,g in d_df]
-        kwsearch_norm = [kwd_count(term, ' '.join(g.clean_text), omit)/len(g) for n,g in d_df]
+        kwsearch_abs = [kwd_count(term, ' '.join(g.full_text.str.lower()), omit) for n,g in d_df]
+        kwsearch_norm = [kwd_count(term, ' '.join(g.full_text.str.lower()), omit)/len(g) for n,g in d_df]
         # normalize to data
         kwsearch_norm = minmax_scale(kwsearch_norm)
 
@@ -202,7 +203,7 @@ def plot_terms_by_month(df, stlist, omit):
 def get_tabs(df, term, omit):
 
     try:
-        if kwd_count(term, ' '.join(df.clean_text), omit) == 0:
+        if kwd_count(term, ' '.join(df.full_text), omit) == 0:
             return
     except AttributeError:
         pass

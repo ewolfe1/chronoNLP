@@ -17,6 +17,8 @@ placeholder = st.empty()
 st.subheader('Search for keywords')
 getdata.df_summary_header()
 
+st.write(df.sample())
+
 # keyword search
 # placeholder.markdown('*. . . Analyzing search terms . . .*\n\n')
 
@@ -35,15 +37,17 @@ with kw_cols[1]:
 stlist = []
 if searchterm != '':
     searchterm = [t.strip().lower() for t in searchterm.split(',')]
-    st.write("""***Search terms included in results:***  
+    st.write("""***Search terms included in results:***
     (*Note that only the first ten will be charted due to resource considerations.*)""")
     for t in searchterm:
         if '*' in t:
-            matchdict = kwsearchproc.get_pattern(f'^{t}', ' '.join(df.clean_text), omit)
+            # matchdict = kwsearchproc.get_pattern(f'^{t}', ' '.join(df.clean_text), omit)
+            matchdict = kwsearchproc.get_pattern(f'^{t}', ' '.join(df.full_text.str.lower()), omit)
         else:
-            matchdict = kwsearchproc.get_pattern(t, ' '.join(df.clean_text), omit)
+            # matchdict = kwsearchproc.get_pattern(t, ' '.join(df.clean_text), omit)
+            matchdict = kwsearchproc.get_pattern(t, ' '.join(df.full_text.str.lower()), omit)
         # matchstr = ', '.join(natsorted([f'{k} ({v:,})' for k,v in matchdict.items()]))
-        matchstr = ', '.join(natsorted([k for k,v in matchdict.items() if kwsearchproc.kwd_count(k, ' '.join(df.clean_text), omit) > 0]))
+        matchstr = ', '.join(natsorted([k for k,v in matchdict.items() if kwsearchproc.kwd_count(k, ' '.join(df.full_text), omit) > 0]))
 
         st.write(f"**{t.strip()}** -- {matchstr}")
 

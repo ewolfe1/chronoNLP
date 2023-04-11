@@ -26,7 +26,7 @@ def items_by_source():
 
     # sorting this way to ensure label is sequential
     # for source in df.source.value_counts(ascending=True).keys():
-    for source in df.source.tolist():
+    for source in df.source.unique():
         d_df = df[df.source==source].groupby('date')
 
         fig.add_trace(go.Bar(x=natsorted([getdata.get_cleandate(n) for n,g in d_df]), y=d_df.count()['label'],
@@ -44,6 +44,7 @@ def items_by_source():
 
     return fig
 
+# @st.cache_data
 def get_tech_details():
 
     df = state.df_filtered
@@ -69,9 +70,12 @@ def get_tech_details():
 
     tech_df['Number of items'] = tech_df['Number of items'].astype(int)
     tech_df.sort_values(by=['Number of items'], ascending=False, inplace=True)
+    tech_df['Number of items'] = tech_df['Number of items'].apply(lambda x: f"{x:,}")
     tech_df.set_index('Source', inplace=True)
     tech_df = tech_df.reindex(columns=['Number of items','Earliest','Most recent','Average length','Longest','Shortest','Readability score','Grade level'])
-    return tech_df.style.format({'Number of items':'{:,}'})
+    #return tech_df.style.format({'Number of items':'{:,}'})
+    return tech_df
+
 
 def text_features():
 
@@ -120,3 +124,41 @@ def text_features():
                                                   }])])
     pos_df.set_index(['Part of speech'],inplace=True, drop=True)
     return total_words, total_wo_common, pos_df
+
+# @st.cache_data
+def get_entities():
+
+    df = state.df_filtered
+    # break pos into separate df for eval
+    df_ent = df[['date','cleandate','entities_all']].copy()
+    try:
+        df_ent['entities_all'] = df_ent['entities_all'].apply(literal_eval)
+    except:
+        pass
+    df_ent = df_ent.set_index(['date','cleandate']).apply(lambda x: x.explode()).reset_index()
+    df_ent['token'] = df_ent['entities_all'].apply(lambda x: None if isinstance(x, float) else x[0].lower())
+    df_ent['entity'] = df_ent['entities_all'].apply(lambda x: None if isinstance(x, float) else x[1])
+    df_ent = df_ent[~df_ent.token.isnull()]
+    df_ent.drop('entities_all', axis=1, inplace=True)
+
+    ent_dict = {}
+    for n,g in df_ent.groupby('entity'):
+        ent_dict[n] = g.copy()
+
+    ent_df = pd.DataFrame()
+    total_words = len(df_ent)
+
+    for name,data in ent_dict.items():
+
+        count = data['entity'].count()
+        top = data['token'].value_counts()[:12]
+        ent_df = pd.concat([ent_df, pd.DataFrame([{'Named entity':name,
+                                                   # 'Count':f"{count:,} ({count/total_words*100:.1f}%)",
+                                                   'Count':count,
+                                                  'Most frequent':', '.join([f"{t[0]} ({t[1]:,})" for t in zip(top.keys(), top.values)])
+                                                  }])])
+    ent_df.sort_values('Count', inplace=True, ascending=False)
+    ent_df['Count'] = ent_df['Count'].apply(lambda x: f"{x:,} ({x/total_words*100:.1f}%)")
+    ent_df.set_index(['Named entity'],inplace=True, drop=True)
+
+    return ent_df

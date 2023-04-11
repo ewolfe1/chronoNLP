@@ -25,6 +25,7 @@ st.markdown("""*Available tools include:*
 
 * A simple interface to adjust the date range or source(s) analyzed
 * Detailed summary of the data, including distribution over time and by source
+* Parts-of-speech (POS) and Named Entity Recognition
 * Full text searching of the data, plotting the results by frequency over time and by source
 * Computationally derived term frequency analysis, allowing a highly customizable means to view statistically significant n-grams used in the texts
 * Topic modeling, with a means to see the weighted distribution of algorithmically derived topics over time
@@ -58,7 +59,7 @@ with datapick_cols[2]:
         st.write('Upload your own dataset')
         if st.button('Select', key='datapick_ul'):
             state.init_data = 'ul'
-            tools.switch_page('Upload_dataset')
+            tools.switch_page('7_Upload_dataset')
 
 # getdata.init_data()
 if 'init_data' in state:

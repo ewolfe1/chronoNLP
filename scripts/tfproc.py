@@ -8,6 +8,7 @@ import plotly.graph_objs as go
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 # from multi_rake import Rake
+from rake_nltk import Rake
 
 from nltk import FreqDist
 from textblob import TextBlob, Word
@@ -119,14 +120,14 @@ def get_tfidf(df, tf):
 
     class_df, tf, omit = filter_df(df, tf)
 
-    cvec = CountVectorizer(stop_words=None, min_df=3, max_df=50, ngram_range=(tf['ngram'], tf['ngram']))
+    cvec = CountVectorizer(stop_words='english', min_df=0.5, max_df=1, ngram_range=(tf['ngram'], tf['ngram']))
     sf = cvec.fit_transform([t for t in class_df[~class_df.clean_text.isnull()].clean_text.values])
     data = ' '.join(class_df[~class_df.clean_text.isnull()].clean_text)
 
     transformer = TfidfTransformer()
     transformed_weights = transformer.fit_transform(sf)
     weights = np.asarray(transformed_weights.mean(axis=0)).ravel().tolist()
-    weights_df = pd.DataFrame({'term': cvec.get_feature_names(), 'TF-IDF weight': weights})
+    weights_df = pd.DataFrame({'term': cvec.get_feature_names_out(), 'TF-IDF weight': weights})
     weights_df = weights_df[~weights_df['term'].isin(omit)]
     weights_df = weights_df.sort_values(by='TF-IDF weight', ascending=False).head(200)
 

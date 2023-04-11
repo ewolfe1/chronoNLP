@@ -35,45 +35,30 @@ def ul1():
             st.markdown("""
     The follow are the elements that can be accessed in this site.
 
-* **uniqueID** *- a unique identifier for each item in your dataset (e.g. URI, Volume/Issue number, filename) - **Required***
 * **full text** *- the actual text that will be analyzed - **Required***
 * **date** *- the date for each item to facilitate a time-based exploration of your data - **Required***
+* **uniqueID** *- a unique identifier for each item in your dataset (e.g. URI, Volume/Issue number, filename) - Optional*
 * **label** *- a label associated with each item (e.g. title of article, subject) - Optional*
 * **source** *- an data point that can enable grouping (e.g. author, publisher) - Optional*
     """)
 
             st.markdown('### CSV upload requirements')
-            st.markdown("""The CSV file must have at least three columns, as described above:
-
-* Unique identifier
-* Date
-* Full text""")
-            st.markdown("""The CSV file may also have two optional columns, as described above:
-
-* Label
-* Source""")
-            st.markdown("""Additional notes:
-
-* Your CSV file does not have to have these specific headings, as they will be mapped in the next step.
-* Any other columns will be ignored""")
+            st.markdown("""The CSV file must have at least two columns, as described above: **date**, **full_text**""")
+            st.markdown("""The CSV file may also have up to three optional columns, as described above: \
+            **uniqueID**, **label, **source**""")
+            st.markdown("""Note that your CSV file **does not have to have these specific headings, as they \
+            will be mapped in the next step. Any other columns will be ignored""")
 
             st.markdown('### ZIP upload requirements')
             st.markdown("""ZIP files containing text to be analyzed may be uploaded, with the following requirements:
 
 * All text files must be in TXT format
 * There must be an inventory, saved in CSV format""")
-            st.markdown("""The CSV must have at least two columns:
-
-* Filename - this can be the unique identifier and will be also used to map the full text for each entry
-* Date""")
-            st.markdown("""The CSV file may also have two optional columns, as described above:
-
-* Label
-* Source""")
-            st.markdown("""Additional notes:
-
-* Your CSV file does not have to have these specific headings, as they will be mapped in the next step.
-* Any other columns will be ignored""")
+            st.markdown("""The CSV must have at least two columns, as described above: **date**, **filename**. \
+            Note that the filename can be the unique identifier and will be used to map the full text for each entry.""")
+            st.markdown("""The CSV file may also have two optional columns, as described above: **label, **source**""")
+            st.markdown("""Note that your CSV file **does not have to have these specific headings, as they \
+            will be mapped in the next step. Any other columns will be ignored""")
 
         if 'ul_key' not in state:
             state.ul_key = str(randint(1000, 100000000))
@@ -159,8 +144,8 @@ def ul2():
                 user_info = {}
                 user_info['label'] = st.selectbox('A single label for the item (optional, e.g., title)', ['No label'] + user_df.columns.tolist(), index=get_index(('label','title')))
                 user_info['full_text'] = st.selectbox('Full text (text to be analyzed)', user_df.columns, index=get_index(('full_text','text')))
-                user_info['uniqueID'] = st.selectbox('Unique Identifier', user_df.columns, index=get_index(('uniqueID','url')))
-                user_info['source'] = st.selectbox('Source (optional field to allow grouping, e.g., author, publisher)', ['No source'] + user_df.columns.tolist(), index=get_index(('source','')))
+                user_info['uniqueID'] = st.selectbox('Unique Identifier', ['No unique ID'] + user_df.columns.tolist(), index=get_index(('uniqueID','url')))
+                user_info['source'] = st.selectbox('Source (optional field to allow grouping, e.g., author, publisher)', ['Single source'] + user_df.columns.tolist(), index=get_index(('source','')))
 
             with user_cols[1]:
                 user_info['date'] =  st.selectbox('Date', user_df.columns, index=get_index(('date','year')))
@@ -187,22 +172,26 @@ def ul2():
 
             changes, user_data_accepted = False, False
 
-            t_df = user_df[list(set(v for k,v in user_info.items()))].copy()
-            t_df.rename(columns = {v:k for k,v in user_info.items()}, inplace = True)
+            toskip = ['No label','No unique ID','Single source']
+            t_df = user_df[list(set(v for k,v in user_info.items() if v not in toskip))].copy()
+            t_df.rename(columns = {v:k for k,v in user_info.items() if v not in toskip}, inplace = True)
 
-            for c in ['full_text','uniqueID','date']:
+            for c in ['full_text','date']:
                 if t_df[c].isnull().values.any():
                     st.write(f"The field **{c}** is required for all rows. You have {t_df[c].isnull().sum()} empty values (of {len(t_df)} rows). These rows have been automatically excluded from the data. To access all of the data, please check your data for missing fields and try again.")
                     t_df = t_df[~t_df[c].isnull()]
                     changes = True
 
-            for c in ['label','source']:
+            for c in ['label','source','uniqueID']:
 
                 if c not in t_df.columns and c in user_info:
-                    t_df[c] = user_df[user_info[c]]
+                    try:
+                        t_df[c] = user_df[user_info[c]]
+                    except KeyError:
+                        pass
 
-                if user_info[c] == f"No {c}":
-                    t_df[c] = f"No {c}"
+                if user_info[c] in toskip:
+                    t_df[c] = c
                 elif t_df[c].isnull().values.any():
                     t_df[c] = t_df[c].fillna(f'No {c}')
                     st.write(f"The field **{c}** is an optional field for your data. You have {t_df[c].isnull().sum()} empty values (of {len(t_df)} rows). These values have been auto-filled with the value 'No {c}'.")

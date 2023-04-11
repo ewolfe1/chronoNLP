@@ -13,10 +13,10 @@ import gensim
 import gensim.corpora as corpora
 from gensim.models import CoherenceModel
 
-@st.experimental_memo
+# @st.cache_resource
 def get_ta_models(data):
     # Build the bigram model
-    bigram = gensim.models.Phrases(data, min_count=3, threshold=60) # higher threshold fewer phrases.
+    bigram = gensim.models.Phrases(data, min_count=3, threshold=50) # higher threshold fewer phrases.
     bigram_mod = gensim.models.phrases.Phraser(bigram)
 
     def make_bigrams(texts):
@@ -34,11 +34,11 @@ def get_ta_models(data):
 def get_lda_model(id2word, corpus, num_topics):
     lda_model = gensim.models.ldamodel.LdaModel(corpus=corpus,id2word=id2word,
             num_topics=num_topics, random_state=100, update_every=1,
-            chunksize=200, passes=2, alpha='auto', per_word_topics=True)
+            chunksize=200, passes=5, alpha='auto', per_word_topics=True)
 
     return lda_model
 
-#@st.experimental_memo
+# @st.cache_data
 def get_topic_df(df_filtered, _lda_model, corpus):
     # make df of top topics
     topic_df = pd.DataFrame()
@@ -103,7 +103,8 @@ def topics_by_month(lda_model, topic_df, ta_abs_btn):
                                  sizemin=sizemin),
                                  name=f'Topic {topic_num + 1} - {kwds}',
                                  line_shape='spline'))
-        fig.update_layout(legend=dict(yanchor="top", y=-0.1, xanchor="left", x=0, itemsizing='constant'))
+        fig.update_layout(legend=dict(yanchor="top", y=-0.1, xanchor="left",
+                        x=0, itemsizing='constant', traceorder='normal'))
         fig.update_layout(height=700)
 
     return fig

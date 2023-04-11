@@ -156,6 +156,7 @@ def preprocess(df):
     # update dates
     df['date'] = df['date'].apply(lambda x: parse_date(x))
     df['cleandate'] = df['date'].apply(lambda x: get_cleandate(x))
+    df = df[~df['clean_text'].isnull()]
 
     nlp_placeholder.markdown('*Text cleaning and lemmatization complete.*')
 

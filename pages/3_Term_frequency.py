@@ -10,7 +10,7 @@ import sys
 from scripts import tools, getdata, tfproc
 tools.page_config()
 
-@st.cache
+@st.cache_resource
 def tb_corpora():
     cmd = [f"{sys.executable}","-m","textblob.download_corpora"]
     subprocess.run(cmd)
@@ -90,4 +90,22 @@ with tf_col2:
     # set values to session state
     state.tf_forms[1] = tf2
 
+with st.expander('About this page'):
+    st.write("""**Term frequency (TF)** is a common natural language processing (NLP) process which \
+    calculates the number of times a term (word or phrase) appears in a document, at times \
+    relative to the total number of terms in the document. It is often used as a basic \
+    feature for tasks such as document classification or simple usage over time.""")
+    st.write("""**"Term Frequency-Inverse Document Frequency" (TF-IDF)** is a numerical \
+    logarithmic calculation that is a more specific type of term frequency calculation. \
+    **Inverse Document Frequency (IDF)** calculates the number of documents that contain \
+    the term, in comparison to the total number of documents in the set. TF-IDF uses these two\
+    figures to assign weights to different terms, giving a higher weight to terms that have \
+    higher frequency within a specific document (higher TF) and lower frequency across the \
+    entire collection of documents (lower IDF). This helps identify terms that are both \
+    important within a document and distinctive across the collection of documents.""")
+    st.write("""This site uses a combination of the Natural Language Toolkit (NLTK), TextBlob, \
+    and scikit-learn libraries in Python for these calculations.""")
+    st.write("""More information can be found in the respective documentation: \
+    https://www.nltk.org/api/nltk.html, https://textblob.readthedocs.io/en/dev/, \
+    https://scikit-learn.org/stable/user_guide.html""")
 placeholder.empty()

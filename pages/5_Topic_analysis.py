@@ -26,17 +26,12 @@ df_filtered = state.df_filtered
 st.subheader('Topic modeling')
 getdata.df_summary_header()
 
-st.write("""**Topic modeling** is an algorithmic process that evaluates a set of documents to computationally identify topics contained within. A set of keywords is generated for each topic, along with a probabilistic rate of occurrence for each keyword within that topic. Individual documents are assigned a relative proportion of each topic (to total 100%) based on the content. It is based on the assumptions that (a) a text (document) is composed of several topics, and (b) a topic is composed of a collection of words.
-
-A topic modeling algorithm is a mathematical/statistical model used to infer what are the topics that better represent the data. This site uses Latent Dirichlet Allocation (LDA), a method introduced in 2003 that is commonly used for NLP tasks.(Blei et al, 2003) LDA takes an unsupervised approach to generate a pre-selected number of topics and assign each document to one or more relevant topics.""")
-
-
 # placeholder for status updates
 placeholder = st.empty()
 
 placeholder.markdown('*. . . Initializing . . .*\n\n')
 # get source data
-data = [t.split() for t in df_filtered.clean_text.values.tolist()]
+data = [str(t).split() for t in df_filtered.clean_text.values.tolist() if str(t) not in ['None','nan']]
 
 placeholder.markdown('*. . . Compiling data . . .*\n')
 data_bigrams, id2word, corpus = topicproc.get_ta_models(data)
@@ -178,6 +173,23 @@ with st.expander('What is the ideal number of topics to generate?'):
 
 placeholder.empty()
 
-st.markdown("### References")
-st.caption('[1] Blei, D. M., Ng, A. Y., Jordan, M. I. "Latent dirichlet allocation", The Journal of Machine Learning Research, 3 (2003):993–1022.')
-st.caption('[2] Röder, M., Both, A., & Hinneburg, A. (2015). Exploring the space of topic coherence measures. In Proceedings of the eighth ACM international conference on Web search and data mining (pp. 399–408). Retrieved from https://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf')
+with st.expander('About this page'):
+
+    st.write("""**Topic modeling** is an algorithmic process that evaluates a set of documents to \
+    computationally identify topics contained within. A set of keywords is generated for each topic, \
+    along with a probabilistic rate of occurrence for each keyword within that topic. Individual \
+    documents are assigned a relative proportion of each topic (to total 100%) based on the content. \
+    It is based on the assumptions that (a) a text (document) is composed of several topics, and \
+    (b) a topic is composed of a collection of words.
+
+    A topic modeling algorithm is a mathematical/statistical model used to infer what are the \
+    topics that better represent the data. This site uses the Gensim library to perform a Latent \
+    Dirichlet Allocation (LDA) analysis, a \
+    method introduced in 2003 that is commonly used for NLP tasks.(Blei et al, 2003) LDA takes \
+    an unsupervised approach to generate a pre-selected number of topics and assign each document \
+    to one or more relevant topics.""")
+
+    st.write("More information can be found in Gensim's documentation: https://radimrehurek.com/gensim/models/coherencemodel.html")
+    st.markdown("### References")
+    st.caption('[1] Blei, D. M., Ng, A. Y., Jordan, M. I. "Latent dirichlet allocation", The Journal of Machine Learning Research, 3 (2003):993–1022.')
+    st.caption('[2] Röder, M., Both, A., & Hinneburg, A. (2015). Exploring the space of topic coherence measures. In Proceedings of the eighth ACM international conference on Web search and data mining (pp. 399–408). Retrieved from https://svn.aksw.org/papers/2015/WSDM_Topic_Evaluation/public.pdf')

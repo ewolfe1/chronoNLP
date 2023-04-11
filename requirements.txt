@@ -11,6 +11,7 @@ wordcloud
 gensim==4.1.2
 textblob==0.15.3
 scikit-learn
+rake-nltk
 # multi_rake==0.0.2
 textdescriptives==1.0.6
 numpy==1.23.0  # Sept 2022, later versions of numpy not compatible with tensorflow-macos==2.9.2
