@@ -10,7 +10,7 @@ def local_css(file_name):
     with open(os.path.abspath(file_name)) as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
 
-local_css("../style.css")
+local_css("style.css")
 # /Users/e996w533/Documents/ta-project/streamlit/style.css
 
 # load data
