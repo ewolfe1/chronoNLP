@@ -9,6 +9,7 @@ state = st.session_state
 import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
 from spacytextblob.spacytextblob import SpacyTextBlob
+import spacy_transformers
 import seaborn as sns
 import time
 import textdescriptives as td
@@ -19,7 +20,7 @@ from scripts import tools
 
 
 # load NLP model for spaCy
-@st.cache_resource
+# @st.cache_resource
 def load_model():
 
     try:

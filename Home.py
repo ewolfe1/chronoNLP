@@ -1,5 +1,6 @@
 import streamlit as st
 state = st.session_state
+from streamlit_extras.switch_page_button import switch_page
 
 #--- I don't understand the necessity of this line. But it is needed
 #    to preserve session_state in the cloud. Not locally.
@@ -59,7 +60,7 @@ with datapick_cols[2]:
         st.write('Upload your own dataset')
         if st.button('Select', key='datapick_ul'):
             state.init_data = 'ul'
-            tools.switch_page('7_Upload_dataset')
+            switch_page('upload_dataset')
 
 # getdata.init_data()
 if 'init_data' in state:

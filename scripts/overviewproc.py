@@ -13,34 +13,60 @@ from plotly.subplots import make_subplots
 from wordcloud import WordCloud
 from ast import literal_eval
 import matplotlib.pyplot as plt
+from st_aggrid import AgGrid, JsCode, GridOptionsBuilder
 
 from scripts import tools, getdata
 
-def items_by_source():
+def sort_legend(legend_ct, fig):
+
+    new_order = [f'{k} ({v:,} total uses)' for k,v in natsorted(legend_ct.items(), key=lambda x:x[1])]
+    ordered_legend = []
+    for i in new_order:
+        item = [t for t in fig.data if t['name'] == i]
+        ordered_legend += item
+    return ordered_legend
+
+def items_by_source(dist_val):
 
     # build plot
     fig = go.Figure()
 
     df = state.df_filtered
+    df['count'] = df.full_text.apply(lambda x: len(x.split()))
     df.sort_values('date', ascending=True, inplace=True)
+    legend_ct = {}
 
     # sorting this way to ensure label is sequential
     # for source in df.source.value_counts(ascending=True).keys():
     for source in df.source.unique():
         d_df = df[df.source==source].groupby('date')
 
-        fig.add_trace(go.Bar(x=natsorted([getdata.get_cleandate(n) for n,g in d_df]), y=d_df.count()['label'],
-                            name='{} - {:,} items'.format(source, d_df.count()['label'].sum()),
+        if 'items' in dist_val:
+            ydata = d_df.count()['full_text']
+            label = d_df.count()['full_text'].sum()
+            var = 'items'
+        else:
+            ydata = d_df['count'].sum()
+            label = d_df['count'].sum().sum()
+            var = 'words'
+
+        fig.add_trace(go.Bar(x=natsorted([getdata.get_cleandate(n) for n,g in d_df]), y=ydata,
+                            name='{} - {:,} {}'.format(source, label, var),
                             marker_color=(state.colors[list(df.source.unique()).index(source)])
             ))
 
+        legend_ct[source] = label
+
     # Update layout
     fig.update_layout(barmode='stack', xaxis_tickangle=45,
-                      title='Distribution of items over time',
+                      title=f'Distribution of {var} over time',
                       )
     fig.update_traces(marker_line_width=0)
-    fig.update_yaxes(title_text="Items")
+    fig.update_yaxes(title_text=var.title())
     fig.update_xaxes(title_text="Time")
+
+    # fig.data = sort_legend(legend_ct, fig)
+    # fig.update_layout(showlegend=True, legend={'traceorder':'reversed'})
 
     return fig
 
@@ -117,7 +143,7 @@ def text_features():
     for name,data in pos_dict.items():
 
         count = data['pos'].count()
-        top = data['token'].value_counts()[:12]
+        top = data['token'].value_counts()[:15]
         pos_df = pd.concat([pos_df, pd.DataFrame([{'Part of speech':name,
                                                    'Count':f"{count:,} ({count/total_words*100:.1f}%)",
                                                   'Most frequent':', '.join([f"{t[0]} ({t[1]:,})" for t in zip(top.keys(), top.values)])
@@ -151,14 +177,19 @@ def get_entities():
     for name,data in ent_dict.items():
 
         count = data['entity'].count()
-        top = data['token'].value_counts()[:12]
+        top = data['token'].value_counts()[:15]
+
         ent_df = pd.concat([ent_df, pd.DataFrame([{'Named entity':name,
-                                                   # 'Count':f"{count:,} ({count/total_words*100:.1f}%)",
                                                    'Count':count,
                                                   'Most frequent':', '.join([f"{t[0]} ({t[1]:,})" for t in zip(top.keys(), top.values)])
                                                   }])])
     ent_df.sort_values('Count', inplace=True, ascending=False)
     ent_df['Count'] = ent_df['Count'].apply(lambda x: f"{x:,} ({x/total_words*100:.1f}%)")
     ent_df.set_index(['Named entity'],inplace=True, drop=True)
-
     return ent_df
+
+
+def ner_df():
+
+    df = state.df_filtered
+    return df[df.full_text,str.contains(state.ner_txt, na=False, case=False)]

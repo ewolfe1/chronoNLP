@@ -4,6 +4,7 @@ from scripts import tools, getdata, overviewproc
 tools.page_config()
 from spacy.lang.en.stop_words import STOP_WORDS
 from natsort import natsorted
+from st_aggrid import AgGrid, JsCode, GridOptionsBuilder
 
 # load data
 if 'init' not in st.session_state:

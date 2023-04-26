@@ -1,15 +1,21 @@
 import streamlit as st
 state = st.session_state
 import pandas as pd
+from st_aggrid import GridOptionsBuilder, AgGrid, ColumnsAutoSizeMode
 import numpy as np
 import re
+import random
 from datetime import datetime
+import string
 from natsort import natsorted
 import plotly.graph_objs as go
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import spacy
 from nltk import FreqDist
+from nltk.corpus import stopwords
+stopwords = stopwords.words('english')
+from textblob import TextBlob, Word
 from sklearn.preprocessing import minmax_scale
 from scripts import getdata
 
@@ -27,17 +33,23 @@ def searchtips():
 
 *You may find that wildcard search return unwanted results. If so, enter these terms into the 'Words to omit' box and try the search again.*""")
 
+def strip_punct(k):
+    return re.sub(r'[^\w\s]', '', k)
+
+def get_ct(df, k, omit):
+    return kwd_count(strip_punct(k), ' '.join(df.full_text), omit)
+
+@st.cache_data
 def get_pattern(term, fulltext, omit):
 
     # formatting
-    for o in omit.split(','):
-        fulltext = fulltext.replace(o.lower().strip(),'')
-    tokens = [ft.strip() for ft in fulltext.split()]
+    omit_set = set(omit.lower().strip() for omit in omit.split(','))
+    tokens = [token.strip() for token in fulltext.split() if token.lower().strip() not in omit_set]
+
     term = term.strip().lower()
-    t = term
+
     rep = ['*','^','.',',','”','"']
-    for r in rep:
-        t = t.replace(r,'')
+    t = term.strip().lower().translate(str.maketrans('', '', ''.join(rep)))
 
     if term.startswith('^'):
         return_all = True
@@ -71,28 +83,25 @@ def get_pattern(term, fulltext, omit):
     matchdict = {t:len(matches)}
     return matchdict
 
+@st.cache_data
 def kwd_count(term, fulltext, omit):
 
     # formatting
-    for o in omit.split(','):
-        fulltext = fulltext.replace(o.lower().strip(),'')
-    tokens = [ft.strip() for ft in fulltext.split()]
-    term = term.strip().lower()
-    t = term
-    rep = ['*','^','.',',','”','"']
-    for r in rep:
-        t = t.replace(r,'')
+    omit_set = set(omit.lower().strip() for omit in omit.split(','))
+    tokens = [token.strip() for token in fulltext.split() if token.lower().strip() not in omit_set]
 
-    # partial matches
+    t = term.strip().lower()
+    t = re.sub(r'[^\w\s]', '', t)
+
     if term.startswith('*') and term.endswith('*'):
-        matches = re.findall(t, fulltext)
+        matches = re.findall(t, rf'{fulltext}')
     elif term.endswith('*'):
-        matches = re.findall(fr'\b{t}', fulltext)
+        matches = re.findall(fr'\b{t}', rf'{fulltext}')
     elif term.startswith('*'):
-        matches = re.findall(fr'{t}\b', fulltext)
+        matches = re.findall(fr'{t}\b', rf'{fulltext}')
     # exact count (single word or phrase)
     else:
-        matches = re.findall(fr'\b{t}\b', fulltext)
+        matches = re.findall(fr'\b{t}\b', rf'{fulltext}')
 
     return len(matches)
 
@@ -114,6 +123,8 @@ def plot_term_by_source(df, term, omit):
     df = df[~(df.clean_text.isnull())]
     legend_ct = {}
 
+    source_df = pd.DataFrame()
+
     for source in df.source.unique():
 
         d_df = df[df.source==source].groupby('cleandate')
@@ -133,6 +144,9 @@ def plot_term_by_source(df, term, omit):
         if all(i==0 for i in kwsearch):
             continue
 
+        source_df = pd.concat([source_df, pd.DataFrame([kwsearch], columns=[n for n,g in d_df], index=[f'{source} (R)'])])
+        source_df = pd.concat([source_df, pd.DataFrame([kwsearch_norm], columns=[n for n,g in d_df], index=[f'{source} (N)'])])
+
         fig_abs.add_trace(go.Scatter(x=[n for n,g in d_df], y=kwsearch,
                         name=f'{source} ({total_uses:,} total uses)', line_shape='spline', mode='lines+markers', connectgaps=True,
                         marker_color=(state.colors[list(df.source.unique()).index(source)])
@@ -150,7 +164,7 @@ def plot_term_by_source(df, term, omit):
     fig_norm.data = sort_legend(legend_ct, fig_norm)
     fig_norm.update_layout(showlegend=True, legend={'traceorder':'reversed'})
 
-    return fig_abs, fig_norm, None
+    return fig_abs, fig_norm, source_df.T
 
 # plot multiple terms over time
 @st.cache_resource
@@ -186,8 +200,8 @@ def plot_terms_by_month(df, stlist, omit):
                         mode='lines+markers', connectgaps= True,
                         line_shape='spline')) # , marker_color=(state.colors[ct])
         # add to df
-        kw_df[f'{term} - Raw count'] = kwsearch_abs
-        kw_df[f'{term} - Normalized'] = kwsearch_norm
+        kw_df[f'{term} (R)'] = kwsearch_abs
+        kw_df[f'{term} (N)'] = kwsearch_norm
         legend_ct[term] = total_uses
 
         ct += 1
@@ -227,8 +241,108 @@ def get_tabs(df, term, omit):
 
     with t3:
         st.write('Raw and normalized (scale of 0 to 1) frequency counts for each term.')
-        st.table(kw_src_df)
+        # st.table(kw_src_df)
+        gb = GridOptionsBuilder.from_dataframe(kw_src_df)
+        gridOptions = gb.build()
+        column_defs = gridOptions["columnDefs"]
+        for col_def in column_defs:
+            col_name = col_def["field"]
+            max_len = kw_src_df[col_name].astype(str).str.len().max() + 5
+            col_def["width"] = max_len
+        grid_response = AgGrid(
+            kw_src_df,
+            columns_auto_size_mode=ColumnsAutoSizeMode.FIT_CONTENTS,
+            gridOptions=gridOptions,
+            # alwaysShowHorizontalScroll = True,
+            #fit_columns_on_grid_load=True,
+            width='100%'
+        )
 
         # fn = '_'.join([t.lower().strip() for t in terms])
         # st.download_button(label="Download data as CSV", data=kw_src_df.to_csv().encode('utf-8'),
         #      file_name=f'keywords-{fn}.csv', mime='text/csv', key=f'kw_dl{terms.index(term)}')
+
+
+def get_re_pattern(term):
+
+    if term.startswith('*') and term.endswith('*'):
+        pattern = term.replace('*','')
+    elif term.endswith('*'):
+        pattern = fr"\b{term.replace('*','')}"
+
+    elif term.startswith('*'):
+        pattern = fr"{term.replace('*','')}\b"
+    else:
+        pattern = fr'\b{term}\b'
+
+    return pattern
+
+
+def kwic(df, term):
+
+    if type(term) == list:
+        pattern = '|'.join([get_re_pattern(t) for t in term])
+        term = '|'.join(term)
+    else:
+        pattern = get_re_pattern(term)
+
+    t_df = df[df.full_text.str.contains(term, case=False, na=False)]
+    kwic_df = pd.DataFrame()
+
+    for i,r in t_df.iterrows():
+
+        words = r.full_text.split()
+        n = 7
+
+        # Loop through each word and find matches
+        for iw, word in enumerate(words):
+            if re.search(pattern, word, re.IGNORECASE):
+
+                prev = words[max(0, iw-(n+1)):iw]
+                t = words[iw]
+                next = words[iw+1:iw+(n+2)]
+
+                if len(prev) > n:
+                    prev = ['...'] + prev[1:]
+                # else:
+                #     prev = prev[:n]
+                if len(next) > n:
+                    next = next[:-1] + ['...']
+                # else:
+                #     next = next[:n]
+
+                kwic_df = pd.concat([kwic_df, pd.DataFrame([{'cleandate':r.cleandate,
+                            'left':" ".join(prev),
+                            'keyword':t,
+                            'right':" ".join(next),
+                            'uniqueID':r.uniqueID}])])
+
+    kwic_df.sort_values('cleandate', ascending=True, inplace=True)
+    kwic_df.reset_index(inplace=True, drop=True)
+
+    kwic_df.set_index('cleandate', inplace=True)
+    return kwic_df
+
+# look at nearby words
+def cooccurence(df):
+
+    left = ' '.join(df[~df.left.isnull()].left.str.lower().tolist())
+    right = ' '.join(df[~df.right.isnull()].right.str.lower().tolist())
+    all = ' '.join([left, right])
+
+    def get_freq(l):
+
+        tb_to_eval = TextBlob(l)
+        grouped_text = FreqDist([' '.join(ng) for ng in tb_to_eval.ngrams(1)]).most_common(200)
+        grouped_text = [g for g in grouped_text if g[0].lower() not in stopwords and g[0].lower().isalpha()]
+        # grouped_text_dict = {t:f for t,f in grouped_text}
+        common_df = pd.DataFrame(grouped_text[:10], columns=['term','frequency'])
+        common_df.set_index('term', inplace=True)
+
+        return common_df
+
+    left_df = get_freq(left)
+    right_df = get_freq(right)
+    all_df = get_freq(all)
+
+    return left_df, right_df, all_df
