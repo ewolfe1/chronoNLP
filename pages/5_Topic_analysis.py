@@ -156,7 +156,7 @@ with st.expander('What is the ideal number of topics to generate?'):
             coherence_df = pd.concat([coherence_df, pd.DataFrame([{'Number of topics':num_topics,
                                 'Perplexity':perplexity, 'Coherence':coherence_lda}])])
             # coherence_df.drop_duplicates(inplace=True)
-            coherence_df.reset_index(inplace=True)
+        coherence_df.reset_index(inplace=True)
 
         topiceval_placeholder.empty()
         st.markdown("""This plot shows the evaluations of a variety of topic models created using the Gensim \
