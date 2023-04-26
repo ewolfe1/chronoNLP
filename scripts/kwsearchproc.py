@@ -12,9 +12,11 @@ import plotly.graph_objs as go
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import spacy
+import nltk
+nltk.download('stopwords')
+stopwords = stopwords.words('english')
 from nltk import FreqDist
 from nltk.corpus import stopwords
-stopwords = stopwords.words('english')
 from textblob import TextBlob, Word
 from sklearn.preprocessing import minmax_scale
 from scripts import getdata
