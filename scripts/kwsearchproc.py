@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import spacy
 import nltk
 from nltk.corpus import stopwords
-stopwords = stopwords.words('english')
+stop_words = set(stopwords.words('english'))
 from nltk import FreqDist
 from nltk.corpus import stopwords
 from textblob import TextBlob, Word
@@ -336,7 +336,7 @@ def cooccurence(df):
 
         tb_to_eval = TextBlob(l)
         grouped_text = FreqDist([' '.join(ng) for ng in tb_to_eval.ngrams(1)]).most_common(200)
-        grouped_text = [g for g in grouped_text if g[0].lower() not in stopwords and g[0].lower().isalpha()]
+        grouped_text = [g for g in grouped_text if g[0].lower() not in stop_words and g[0].lower().isalpha()]
         # grouped_text_dict = {t:f for t,f in grouped_text}
         common_df = pd.DataFrame(grouped_text[:10], columns=['term','frequency'])
         common_df.set_index('term', inplace=True)
