@@ -153,16 +153,21 @@ with st.expander('What is the ideal number of topics to generate?'):
             # c_v may be better but is unsustainably slow in this environment
             coherence_model_lda = CoherenceModel(model=lda_model_results, texts=data_bigrams, dictionary=id2word, coherence='u_mass')
             coherence_lda = coherence_model_lda.get_coherence()
-            coherence_df = coherence_df.append({'Number of topics':num_topics, 'Perplexity':perplexity, 'Coherence':coherence_lda}, ignore_index=True)
             coherence_df = pd.concat([coherence_df, pd.DataFrame([{'Number of topics':num_topics,
                                 'Perplexity':perplexity, 'Coherence':coherence_lda}])])
-            #st.markdown('{} topics - {} (lower is better) / {} (higher is better)'.format(num_topics, perplexity, coherence_lda))
-
+            # coherence_df.drop_duplicates(inplace=True)
+            coherence_df.reset_index(inplace=True)
 
         topiceval_placeholder.empty()
-        st.markdown('This plot shows the evaluations of a variety of topic models created using the Gensim implementation of Latent Dirichlet Allocation (LDA) method.')
-        st.markdown('In short, the Perplexity is an intrinsic evaluation measure of the predictive quality of the language model, with a lower number representing a better model. While this is useful for machine learning tasks, it may not be the best measure for creating a human interpretable model.')
-        st.markdown('Coherence is a measure of the internal semantic similiarity within a topic, with a higher number representing a more semantically clear topic. This is likely the better measure to use when creating a model to be visually reviewed. ***--a number that represents the overall topics’ interpretability and is used to assess the topics’ quality.***')
+        st.markdown("""This plot shows the evaluations of a variety of topic models created using the Gensim \
+        implementation of Latent Dirichlet Allocation (LDA) method.""")
+        st.markdown("""In short, the Perplexity is an intrinsic evaluation measure of the predictive quality \
+        of the language model, with a lower number representing a better model. While this is useful for machine \
+        learning tasks, it may not be the best measure for creating a human interpretable model.""")
+        st.markdown("""Coherence is a measure of the internal semantic similiarity within a topic, with a higher \
+        number representing a more semantically clear topic. This is likely the better measure to use when creating \
+        a model to be visually reviewed. ***--a number that represents the overall topics’ interpretability and is \
+        used to assess the topics’ quality.***""")
         coh_cols = st.columns([3,1])
         with coh_cols[0]:
 

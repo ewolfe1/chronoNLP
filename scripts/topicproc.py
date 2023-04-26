@@ -93,7 +93,7 @@ def topics_by_month(lda_model, topic_df, ta_abs_btn):
     t_df = t_df.sort_values('month')
     maxval = t_df[[c for c in t_df.columns if str(c).isdigit()]].max(axis=1).max(axis=0)
 
-    for topic_num in t_df[[c for c in t_df.columns if str(c).isdigit()]]:
+    for topic_num in t_df[list(set([c for c in t_df.columns if str(c).isdigit()]))]:
 
         maxsize = t_df[topic_num].apply(lambda x: x/maxval*100)
         kwds = ', '.join([lda_model.id2word[t[0]] for t in lda_model.get_topic_terms(topic_num)])
