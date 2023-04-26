@@ -4,6 +4,7 @@ streamlit
 streamlit-webrtc
 streamlit-aggrid
 streamlit-extras
+spacy-transformers
 natsort==7.1.1
 seaborn
 spacy>=3.0.0,<4.0.0
