@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 # from multi_rake import Rake
 from rake_nltk import Rake
 
-from nltk import FreqDist 
+from nltk import FreqDist
 from textblob import TextBlob, Word
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
@@ -120,7 +120,8 @@ def get_tfidf(df, tf):
 
     class_df, tf, omit = filter_df(df, tf)
 
-    cvec = CountVectorizer(stop_words='english', min_df=0.5, max_df=1, ngram_range=(tf['ngram'], tf['ngram']))
+    #
+    cvec = CountVectorizer(stop_words='english', min_df=1, max_df=0.5, ngram_range=(tf['ngram'], tf['ngram']))
     sf = cvec.fit_transform([t for t in class_df[~class_df.clean_text.isnull()].clean_text.values])
     data = ' '.join(class_df[~class_df.clean_text.isnull()].clean_text)
 

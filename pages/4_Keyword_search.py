@@ -51,7 +51,7 @@ kwd_process.info('*. . . Evaluating relevant search terms . . .*')
 # combined counts
 stlist = []
 if searchterm != '':
-    searchterm = [t.strip().lower() for t in searchterm.split(',')]
+    searchterm = [t.split()[0].strip().lower() for t in searchterm.split(',')]
     text_to_match = ' '.join(df.full_text.str.lower())
     with st.expander('Search terms included in results'):
         st.write("""*These are the individual terms that match the above search string.\

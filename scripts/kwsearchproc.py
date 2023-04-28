@@ -89,21 +89,21 @@ def get_pattern(term, fulltext, omit):
 def kwd_count(term, fulltext, omit):
 
     # formatting
-    omit_set = set(omit.lower().strip() for omit in omit.split(','))
+    omit_set = set(o.lower().strip() for o in omit.split(',') if o != '')
     tokens = [token.strip() for token in fulltext.split() if token.lower().strip() not in omit_set]
 
     t = term.strip().lower()
     t = re.sub(r'[^\w\s]', '', t)
 
     if term.startswith('*') and term.endswith('*'):
-        matches = re.findall(t, rf'{fulltext}')
+        matches = re.findall(t, rf'{fulltext}', re.IGNORECASE)
     elif term.endswith('*'):
-        matches = re.findall(fr'\b{t}', rf'{fulltext}')
+        matches = re.findall(fr'\b{t}', rf'{fulltext}', re.IGNORECASE)
     elif term.startswith('*'):
-        matches = re.findall(fr'{t}\b', rf'{fulltext}')
+        matches = re.findall(fr'{t}\b', rf'{fulltext}', re.IGNORECASE)
     # exact count (single word or phrase)
     else:
-        matches = re.findall(fr'\b{t}\b', rf'{fulltext}')
+        matches = re.findall(fr'\b{t}\b', rf'{fulltext}', re.IGNORECASE)
 
     return len(matches)
 
@@ -186,6 +186,7 @@ def plot_terms_by_month(df, stlist, omit):
         total_uses = kwd_count(term, ' '.join(df.full_text), omit)
         if total_uses == 0:
             continue
+        legend_ct[term] = total_uses
 
         kwsearch_abs = [kwd_count(term, ' '.join(g.full_text.str.lower()), omit) for n,g in d_df]
         kwsearch_norm = [kwd_count(term, ' '.join(g.full_text.str.lower()), omit)/len(g) for n,g in d_df]
@@ -204,7 +205,6 @@ def plot_terms_by_month(df, stlist, omit):
         # add to df
         kw_df[f'{term} (R)'] = kwsearch_abs
         kw_df[f'{term} (N)'] = kwsearch_norm
-        legend_ct[term] = total_uses
 
         ct += 1
 
