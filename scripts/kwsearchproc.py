@@ -13,6 +13,7 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 import spacy
 import nltk
+nltk.download('stopwords')
 from nltk.corpus import stopwords
 stop_words = set(stopwords.words('english'))
 from nltk import FreqDist
