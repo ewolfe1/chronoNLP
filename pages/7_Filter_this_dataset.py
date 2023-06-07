@@ -81,11 +81,9 @@ if 'df_filtered' in state and len(state.df_filtered) != len(state.df):
         else:
             fn = 'filtered_dataset.csv'
 
-        dl_cols = st.columns((1,1,2))
+        dl_cols = st.columns((1,3))
         with dl_cols[0]:
             st.download_button('Download as CSV', df_filtered.to_csv(index=False, encoding='utf_8'), file_name=fn)
-        with dl_cols[1]:
-            st.download_button('Download as JSON', df_filtered.to_json(orient='records'), file_name=fn.replace('.csv','.json'))
 
 # option to revert to original dataset
 st.markdown('## Reset all filters')

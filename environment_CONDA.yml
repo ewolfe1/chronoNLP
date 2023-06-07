@@ -1,4 +1,4 @@
-name: news_analysis
+name: ChronoNLP
 channels:
   - plotly
   - conda-forge

@@ -17,6 +17,7 @@ import json
 from tensorflow.keras.preprocessing.text import Tokenizer, tokenizer_from_json
 from ast import literal_eval
 from scripts import tools
+from streamlit_extras.switch_page_button import switch_page
 
 
 # load NLP model for spaCy
@@ -204,30 +205,30 @@ def default_vals():
 def init_data():
 
     # # if data already exists, skip the rest
-    if 'init' in state and state.init == True:
-        return
+    # if 'init' in state and state.init == True:
+    #     return
     data_set = True
     data_select = st.empty()
 
     # uncomment this block to undo default dataset
     # # default data has not been set
-    # if 'init_data' not in state:
-    #
-    #     data_set = False
-    #
-    #     with data_select.container():
-    #         st.info("Default data has not been set. This may have been caused by reloading the page, which can cause the user's cache to be reset.")
-    #         data_info = st.empty()
-    #
-    #         for i in [5,4,3,2,1]:
-    #             data_info.warning(f"Returning you to the home page in {i} seconds.")
-    #             time.sleep(1)
-    #
-    #         tools.switch_page('Home')
+    if 'init_data' not in state:
 
-    # comment out the next two lines to unde default dataset
-    state.init_data = 'douglas'
-    data_set = True
+        data_set = False
+
+        with data_select.container():
+            st.info("Default data has not been set. This may have been caused by reloading the page, which can cause the user's cache to be reset.")
+            data_info = st.empty()
+
+            for i in [5,4,3,2,1]:
+                data_info.warning(f"Returning you to the home page in {i} seconds.")
+                time.sleep(1)
+
+            switch_page('Home')
+
+    # comment out the next two lines to undo default dataset
+    # state.init_data = 'douglas'
+    # data_set = True
 
     if data_set == True:
 
@@ -237,8 +238,8 @@ def init_data():
             current_csv = 'data/DouglasCoKs.csv'
             tk_js = 'data/tokenizer.json'
             state.date_access = 'Month'
-        elif state.init_data == 'placeholder':
-            current_csv = 'data/placeholder.csv'
+        elif state.init_data == 'hbw':
+            current_csv = 'data/hbw-blog.csv'
             tk_js = None
             state.date_access = 'Year'
 
@@ -281,7 +282,7 @@ def check_user_df():
 
     cols_to_check = ['label','date','source','full_text','uniqueID','clean_text',
             'lemmas','grade_level','readability','polarity','subjectivity',
-            'cleandate','compound','label_compound']
+            'cleandate']
     df = state.user_df
     if all(c in df.columns for c in cols_to_check):
         return True

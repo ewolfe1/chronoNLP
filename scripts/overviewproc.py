@@ -37,8 +37,8 @@ def items_by_source(dist_val):
     legend_ct = {}
 
     # sorting this way to ensure label is sequential
-    # for source in df.source.value_counts(ascending=True).keys():
-    for source in df.source.unique():
+    for source in df.source.value_counts(ascending=True).keys():
+    # for source in df.source.unique():
         d_df = df[df.source==source].groupby('date')
 
         if 'items' in dist_val:
@@ -66,7 +66,7 @@ def items_by_source(dist_val):
     fig.update_xaxes(title_text="Time")
 
     # fig.data = sort_legend(legend_ct, fig)
-    # fig.update_layout(showlegend=True, legend={'traceorder':'reversed'})
+    fig.update_layout(showlegend=True, legend={'traceorder':'reversed'})
 
     return fig
 

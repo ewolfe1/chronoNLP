@@ -17,10 +17,6 @@ def empty():
     ul_container.empty()
     sleep(0.01)
 
-def update_upload_step():
-    state.upload_step = 2
-
-
 def ul1():
     empty()
     with ul_container.container():
@@ -73,6 +69,10 @@ def ul1():
                 state.user_df = user_df
 
                 st.markdown(f"Your dataset consists of {len(user_df):,} items with {len(user_df.columns)} elements.")
+                ct_cols = st.columns(2)
+                with ct_cols[0]:
+                    with st.expander('View column names and counts'):
+                        st.table(pd.DataFrame(user_df.count(), columns=['Count']))
                 with st.expander('View a sample of your dataset'):
                     st.table(getdata.display_user_df(user_df))
                     # st.button('Review and continue', on_click=update_upload_step, key=str(randint(1000, 100000000)))
@@ -107,7 +107,10 @@ def ul1():
 
                             st.success('Success! You can now use the tools on this site to explore your data.')
                 else:
-                    st.button('Review and continue', on_click=update_upload_step, key=str(randint(1000, 100000000)))
+                    def ul_step2():
+                        state.upload_step = 2
+
+                    st.button('Review and continue', on_click=ul_step2, key=str(randint(1000, 100000000)))
 
 def ul2():
 
@@ -178,7 +181,7 @@ def ul2():
 
             for c in ['full_text','date']:
                 if t_df[c].isnull().values.any():
-                    st.write(f"The field **{c}** is required for all rows. You have {t_df[c].isnull().sum()} empty values (of {len(t_df)} rows). These rows have been automatically excluded from the data. To access all of the data, please check your data for missing fields and try again.")
+                    st.write(f"The field **{c}** is required for all rows. You have {len(t_df[t_df[c].isnull()])} empty values (of {len(t_df)} rows). These rows have been automatically excluded from the data. To access all of the data, please check your data for missing fields and try again.")
                     t_df = t_df[~t_df[c].isnull()]
                     changes = True
 
@@ -192,22 +195,20 @@ def ul2():
 
                 if user_info[c] in toskip:
                     t_df[c] = c
+
                 elif t_df[c].isnull().values.any():
-                    t_df[c] = t_df[c].fillna(f'No {c}')
-                    st.write(f"The field **{c}** is an optional field for your data. You have {t_df[c].isnull().sum()} empty values (of {len(t_df)} rows). These values have been auto-filled with the value 'No {c}'.")
+                    st.write(f"The field **{c}** is an optional field for your data. You have {len(t_df[t_df[c].isnull()])} empty values (of {len(t_df)} rows). These values have been auto-filled with the value 'No {c}'.")
                     changes = True
+                    t_df[c] = t_df[c].fillna(f'No {c}')
+
+            def ul_step3():
+                state.upload_step = 3
+                state.user_df = t_df
 
             if changes == True:
-                if st.button('Accept these changes and continue', key=str(randint(1000, 100000000))):
-                    state.user_df = t_df
-                    state.upload_step = 3
+                st.button('Accept these changes and continue', on_click=ul_step3, key=str(randint(1000, 100000000)))
             else:
-                state.user_df = t_df
-                state.upload_step = 3
-
-            # if user_data_accepted:
-            #     state.user_df = t_df
-            #     state.upload_step = 3
+                st.button('Continue to pre-process the data', on_click=ul_step3, key=str(randint(1000, 100000000)))
 
 def ul3():
 
@@ -239,7 +240,7 @@ def ul4():
     empty()
     with ul_container.container():
         st.markdown('### Step 4 of 4 - Download processed data file')
-        st.success('Preprocessing complete. You can now use the tools on this site to explore your data.')
+        st.success('Preprocessing complete. You can now use the tools on this site to explore your data. Download the processed data below.')
 
         st.table(getdata.display_user_df(state.df))
 

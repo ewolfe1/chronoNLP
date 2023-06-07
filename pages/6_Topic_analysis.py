@@ -119,12 +119,15 @@ if topic_btn:
                 st.markdown(f'**Top keywords**')
                 st.markdown(f"{', '.join([lda_model.id2word[t[0]] for t in lda_model.get_topic_terms(i)])}")
 
-            try:
-                wc = topicproc.get_wc(lda_model, i)
-            except:
-                st.markdown(f'Topic {i+1} has no statistically significant results to display')
-
-            sa_cols[2].pyplot(wc)
+            # try:
+            #     wc = topicproc.get_wc(lda_model, i)
+            # except:
+            #     raise
+            #     wc = None
+            #     st.markdown(f'Topic {i+1} has no statistically significant results to display')
+            #
+            # if wc:
+            #     sa_cols[2].pyplot(wc)
 
 
 with st.expander('What is the ideal number of topics to generate?'):

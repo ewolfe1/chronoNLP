@@ -2,8 +2,6 @@ import streamlit as st
 state = st.session_state
 from streamlit_extras.switch_page_button import switch_page
 
-#--- I don't understand the necessity of this line. But it is needed
-#    to preserve session_state in the cloud. Not locally.
 # st.session_state.update(st.session_state)
 
 from scripts import tools, getdata
@@ -41,19 +39,19 @@ datapick_cols = st.columns(3)
 with datapick_cols[0]:
     with st.container():
         st.info('News articles')
-        st.write('3,804 online news articles relating to COVID-19 that were published Douglas County, Kansas between January 28, 2020 and January 31, 2022.')
+        st.write('3,753 news articles relating to COVID-19, published between January 28, 2020 and January 31, 2022.')
         if st.button('Select', key='datapick_douglas'):
             state.init_data = 'douglas'
             state.init = False
             getdata.init_data()
 with datapick_cols[1]:
     with st.container():
-        st.info('Placeholder')
-        st.write("Placeholder")
-        if st.button('Select', key='placeholder'):
-            # state.init_data = 'placeholder'
+        st.info('Blog posts')
+        st.write("757 blog posts from the History of Black Writing project at the University of Kansas, published between 2011 and 2021.")
+        if st.button('Select', key='hbw'):
+            state.init_data = 'hbw'
             state.init = False
-            # getdata.init_data()
+            getdata.init_data()
 with datapick_cols[2]:
     with st.container():
         st.info('Use your own content')
@@ -68,5 +66,17 @@ if 'init_data' in state:
         st.write('')
         st.write(f"You've selected a sample dataset with a total of {len(state.df):,} articles by {len(state.df.source.unique())} publishers. See the *Data Overview* page for more details about this dataset.")
         st.write(state.df[['uniqueID','date','full_text','source','label']].sample(5))
+
+with st.expander('More about the sample datasets'):
+
+    st.write("""***Sample dataset 1***\n
+    A collection of 3,753 news articles from six online publications in Douglas County, Kansas published between January 28, 2020 and January 31, 2022.
+    Articles were collected from three city publications (The Lawrence Journal-World, The Lawrence Times, and the The Eudora Times)
+    and three student university publications (The University Daily Kansan, The Baker Orange, and The Indian Leader).
+    Articles were selected as part of a web archiving project identifying online content relating to COVID-19.\n""")
+
+    st.write("""***Sample dataset 2***\n
+    A collection of 757 posts from the blog of the History of Black Writing (HBW) project at the University of Kansas, published between 2011 and 2021.
+    Learn more about the HBW at https://hbw.ku.edu/.""")
 
 placeholder.empty()

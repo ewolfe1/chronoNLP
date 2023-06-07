@@ -157,7 +157,7 @@ def tf_form(tf):
 
         sources = list(df.source.unique())
         tf['source'] =  st.multiselect('Source(s) (leave blank to select all)',
-            sources,key=f'tfs{n}',default=sources[0])
+            sources,key=f'tfs{n}',default=None)
 
         # tf['source'] = st.multiselect('Source(s)',sources,key=f'tfs{n}',default=sources[1])
         tf['ngram'] = st.selectbox('Ngrams',[1,2,3],key=f'tfng{n}', index=n-1)
