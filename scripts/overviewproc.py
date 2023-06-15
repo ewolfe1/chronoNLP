@@ -70,6 +70,25 @@ def items_by_source(dist_val):
 
     return fig
 
+def update_overview_df(n, g, tech_df):
+
+    info = {}
+    rd = g['readability']
+    gl = g['grade_level']
+
+    info['Source'] = n
+    info['Readability score'] = f'{round(rd.mean(),2)} ({round(max(rd),2)} high, {round(min(rd),2)} low)'
+    info['Grade level'] = f'{round(gl.mean(),2)} ({round(max(gl),2)} high, {round(min(gl),2)} low)'
+    info['Number of items'] = len(g)
+    info['Average length'] = f"{int(len(' '.join(g['full_text']).split()) / len(g)):,} words"
+    info['Longest'] = f"{g.nlargest(1, ['count'])['count'].values[0]:,} words"
+    info['Shortest'] = f"{g.nsmallest(1, ['count'])['count'].values[0]:,} words"
+    info['Earliest'] = getdata.format_dates(g.cleandate.min())
+    info['Most recent'] = getdata.format_dates(g.cleandate.max())
+    tech_df = pd.concat([tech_df, pd.DataFrame([info])])
+
+    return tech_df
+
 # @st.cache_data
 def get_tech_details():
 
@@ -77,22 +96,11 @@ def get_tech_details():
     tech_df = pd.DataFrame()
     df['count'] = df.full_text.apply(lambda x: len(x.split()))
 
+    tech_df = update_overview_df('(All sources)', df, tech_df)
+
     for n,g in df.groupby('source'):
 
-        info = {}
-        rd = g['readability']
-        gl = g['grade_level']
-
-        info['Source'] = n
-        info['Readability score'] = f'{round(rd.mean(),2)} ({round(max(rd),2)} high, {round(min(rd),2)} low)'
-        info['Grade level'] = f'{round(gl.mean(),2)} ({round(max(gl),2)} high, {round(min(gl),2)} low)'
-        info['Number of items'] = len(g)
-        info['Average length'] = f"{int(len(' '.join(g['full_text']).split()) / len(g)):,} words"
-        info['Longest'] = f"{g.nlargest(1, ['count'])['count'].values[0]:,} words"
-        info['Shortest'] = f"{g.nsmallest(1, ['count'])['count'].values[0]:,} words"
-        info['Earliest'] = getdata.format_dates(g.cleandate.min())
-        info['Most recent'] = getdata.format_dates(g.cleandate.max())
-        tech_df = pd.concat([tech_df, pd.DataFrame([info])])
+        tech_df = update_overview_df(n, g, tech_df)
 
     tech_df['Number of items'] = tech_df['Number of items'].astype(int)
     tech_df.sort_values(by=['Number of items'], ascending=False, inplace=True)
@@ -103,7 +111,7 @@ def get_tech_details():
     return tech_df
 
 
-def text_features():
+def text_features(num_tc):
 
     df = state.df_filtered
     # break pos into separate df for eval
@@ -136,23 +144,38 @@ def text_features():
             }
 
     total_words = len(df_pos)
-    total_wo_common = len(df_pos[df_pos['stopword']==True])
+    # total_wo_common = len(df_pos[df_pos['stopword']==True])
 
     pos_df = pd.DataFrame()
+
+    pos_container = '<div class="outer">'
 
     for name,data in pos_dict.items():
 
         count = data['pos'].count()
-        top = data['token'].value_counts()[:15]
+        top = data['token'].value_counts()[:num_tc]
         pos_df = pd.concat([pos_df, pd.DataFrame([{'Part of speech':name,
                                                    'Count':f"{count:,} ({count/total_words*100:.1f}%)",
                                                   'Most frequent':', '.join([f"{t[0]} ({t[1]:,})" for t in zip(top.keys(), top.values)])
                                                   }])])
-    pos_df.set_index(['Part of speech'],inplace=True, drop=True)
-    return total_words, total_wo_common, pos_df
+
+        pos_container += '<div class="inner">'
+        pos_container += f'<p class="colhead">{name}</p>'
+        pos_container += f"<p>{count:,} ({count/total_words*100:.1f}%)</p>"
+
+        pos_container += "<ul>"
+        for t in zip(top.keys(), top.values):
+            pos_container += f"<li>{t[0]} ({t[1]:,})</li>"
+        pos_container += "</ul></div>"
+    pos_container += "</div>"
+
+    st.markdown(pos_container, unsafe_allow_html=True)
+    # pos_df.set_index(['Part of speech'],inplace=True, drop=True)
+
+    return total_words, df_pos
 
 # @st.cache_data
-def get_entities():
+def get_entities(num_ent):
 
     df = state.df_filtered
     # break pos into separate df for eval
@@ -174,19 +197,28 @@ def get_entities():
     ent_df = pd.DataFrame()
     total_words = len(df_ent)
 
+    ent_container = '<div class="outer">'
+
     for name,data in ent_dict.items():
 
         count = data['entity'].count()
-        top = data['token'].value_counts()[:15]
+        top = data['token'].value_counts()[:num_ent]
 
         ent_df = pd.concat([ent_df, pd.DataFrame([{'Named entity':name,
                                                    'Count':count,
                                                   'Most frequent':', '.join([f"{t[0]} ({t[1]:,})" for t in zip(top.keys(), top.values)])
                                                   }])])
-    ent_df.sort_values('Count', inplace=True, ascending=False)
-    ent_df['Count'] = ent_df['Count'].apply(lambda x: f"{x:,} ({x/total_words*100:.1f}%)")
-    ent_df.set_index(['Named entity'],inplace=True, drop=True)
-    return ent_df
+        ent_container += '<div class="inner">'
+        ent_container += f'<p class="colhead">{name}</p>'
+        ent_container += f"<p>{count:,} ({count/total_words*100:.1f}%)</p>"
+
+        ent_container += "<ul>"
+        for t in zip(top.keys(), top.values):
+            ent_container += f"<li>{t[0]} ({t[1]:,})</li>"
+        ent_container += "</ul></div>"
+    ent_container += "</div>"
+
+    st.markdown(ent_container, unsafe_allow_html=True)
 
 
 def ner_df():

@@ -218,13 +218,30 @@ def init_data():
 
         with data_select.container():
             st.info("Default data has not been set. This may have been caused by reloading the page, which can cause the user's cache to be reset.")
+            st.write("Please select an option to continue.")
             data_info = st.empty()
 
-            for i in [5,4,3,2,1]:
-                data_info.warning(f"Returning you to the home page in {i} seconds.")
-                time.sleep(1)
+            ds_cols = st.columns(4)
 
-            switch_page('Home')
+            with ds_cols[0]:
+                if st.button('Sample dataset: News articles'):
+                    state.init_data = 'douglas'
+                    data_set = True
+            with ds_cols[1]:
+                if st.button('Sample dataset: Blog posts'):
+                    state.init_data = 'hbw'
+                    data_set = True
+            with ds_cols[2]:
+                if st.button('Upload user data'):
+                    switch_page('upload_dataset')
+            with ds_cols[3]:
+                if st.button('Home page'):
+                    switch_page('home')
+            # for i in [5,4,3,2,1]:
+            #     data_info.warning(f"Returning you to the home page in {i} seconds.")
+            #     time.sleep(1)
+            #
+            # switch_page('Home')
 
     # comment out the next two lines to undo default dataset
     # state.init_data = 'douglas'

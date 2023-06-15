@@ -1,6 +1,7 @@
 import streamlit as st
 from scripts import tools, getdata, overviewproc
 tools.page_config()
+tools.css()
 
 # load data
 if 'init' not in st.session_state:
@@ -25,7 +26,7 @@ if ready:
     # articles by publication
     placeholder.markdown('*. . . Analyzing item-level data . . .*\n\n')
 
-    st.write('### Distribution over time')
+    st.write('### Distribution of texts')
     dist_val = st.radio('Select graphing method',
                         ['Number of items', 'Word count'],
                         horizontal=True)

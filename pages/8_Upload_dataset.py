@@ -7,6 +7,7 @@ from io import StringIO
 from random import randint
 from scripts import tools, getdata
 tools.page_config()
+tools.css()
 
 # def md5(bytes_data):
 #     hash_md5 = hashlib.md5()

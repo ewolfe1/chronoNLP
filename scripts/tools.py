@@ -1,4 +1,5 @@
 import streamlit as st
+import os
 # state = st.session_state
 
 
@@ -10,3 +11,8 @@ def page_config():
     except st.errors.StreamlitAPIException as e:
         if "can only be called once per app" in e.__str__():
             return
+
+def css():
+
+    with open(os.path.abspath('style.css')) as f:
+        st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)

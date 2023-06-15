@@ -69,8 +69,9 @@ def get_sent_boxplot(df):
     for source in srcs:
 
         # box plot
-        # fig.add_trace(go.Box(y=df[df.source==source][sent_query].tolist(), name=source,jitter=0.4,pointpos=1.6,boxpoints='all',
-        # marker_color=state.colors[list(df.source.unique()).index(source)]), showlegend=False))
+        # fig.add_trace(go.Box(y=df[df.source==source]['compound'].tolist(), name=source,
+        # jitter=0.4, pointpos=1.6, boxpoints='all',
+        # marker_color=state.colors[list(df.source.unique()).index(source)]))
 
         # violin plot
         fig.add_trace(go.Violin(y=df[df.source==source]['compound'].tolist(), box_visible=False,

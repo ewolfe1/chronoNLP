@@ -19,3 +19,27 @@ button[data-baseweb="tab"] {
 button[data-baseweb="tab"][aria-selected="true"] {
     border-color: #ff4b4b;
 }
+
+div.stSlider{padding:1em 2em}
+img{max-width:75%;margin: auto}
+# div.streamlit-expanderHeader{background-color:#8A93DE; color:#ffffff}
+table{width:fit-content; min-width:50%;  margin: 0 auto 1rem auto}
+
+/* start floating divs */
+div[class="outer"] {
+    margin:auto; text-align:center; overflow:hidden; display:table-row}
+div[class="inner"] {
+    display:table-cell; margin:1em auto; padding: 1em; border-left: 1px solid #BCBCBC;
+    overflow: hidden; position:relative; width: 200px; vertical-align: top;}
+div[class="inner"] li {
+    text-align:left;}
+
+html>body #outer {display:table}/*for mozilla */
+html>body .inner {display:table;float:left}/*for mozilla */
+@media all and (min-width: 0px){/* opera 7 styles */
+html>body .inner {display:inline-block;float:none;}
+/* end floating divs */
+
+.colhead {
+    font-size: larger; text-align: center; font-weight: bold;
+    border-bottom: 1px solid #bebebe; margin: 0.8em 1em}
