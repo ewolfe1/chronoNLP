@@ -121,7 +121,8 @@ def ul2():
         st.markdown('### Step 2 of 4 - Review initial data file')
         user_df = state.user_df
 
-        st.table(getdata.display_user_df(user_df))
+        with st.expander('View a sample of your dataset'):
+            st.table(getdata.display_user_df(user_df))
 
         userform = st.form(key='userdata')
 
@@ -148,7 +149,7 @@ def ul2():
                 user_info = {}
                 user_info['label'] = st.selectbox('A single label for the item (optional, e.g., title)', ['No label'] + user_df.columns.tolist(), index=get_index(('label','title')))
                 user_info['full_text'] = st.selectbox('Full text (text to be analyzed)', user_df.columns, index=get_index(('full_text','text')))
-                user_info['uniqueID'] = st.selectbox('Unique Identifier', ['No unique ID'] + user_df.columns.tolist(), index=get_index(('uniqueID','url')))
+                user_info['uniqueID'] = st.selectbox('Unique Identifier', ['No unique ID'] + user_df.columns.tolist(), index=get_index(('ID','uniqueID','url')))
                 user_info['source'] = st.selectbox('Source (optional field to allow grouping, e.g., author, publisher)', ['Single source'] + user_df.columns.tolist(), index=get_index(('source','')))
 
             with user_cols[1]:
@@ -217,10 +218,12 @@ def ul3():
     with ul_container.container():
 
         st.markdown('### Step 3 of 4 - Review processed data file')
-        st.markdown('Please review this data and continue to preprocessing.')
+        st.markdown('Please review this data. Note any new column headers and continue to preprocessing.')
 
         user_df = state.user_df
-        st.table(getdata.display_user_df(user_df))
+
+        with st.expander('View a sample of your dataset'):
+            st.write(getdata.display_user_df(user_df))
 
         st.warning('*Note that, depending on the size of the dataset, the preprocessing step may take quite some time but should only need to be done once per session. Processed data can be downloaded for later re-use and to avoid this step in the future.*')
 
@@ -243,7 +246,8 @@ def ul4():
         st.markdown('### Step 4 of 4 - Download processed data file')
         st.success('Preprocessing complete. You can now use the tools on this site to explore your data. Download the processed data below.')
 
-        st.table(getdata.display_user_df(state.df))
+        with st.expander('View a sample of your dataset'):
+            st.table(getdata.display_user_df(state.df))
 
         with st.info('Download the processed data for later use and to avoid re-processing next time.'):
         # st.markdown('Download the processed data for later use and to avoid re-processing next time.')

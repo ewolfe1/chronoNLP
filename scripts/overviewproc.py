@@ -78,7 +78,7 @@ def update_overview_df(n, g, tech_df):
 
     info['Source'] = n
     info['Readability score'] = f'{round(rd.mean(),2)} ({round(max(rd),2)} high, {round(min(rd),2)} low)'
-    info['Grade level'] = f'{round(gl.mean(),2)} ({round(max(gl),2)} high, {round(min(gl),2)} low)'
+    # info['Grade level'] = f'{round(gl.mean(),2)} ({round(max(gl),2)} high, {round(min(gl),2)} low)'
     info['Number of items'] = len(g)
     info['Average length'] = f"{int(len(' '.join(g['full_text']).split()) / len(g)):,} words"
     info['Longest'] = f"{g.nlargest(1, ['count'])['count'].values[0]:,} words"
@@ -106,7 +106,10 @@ def get_tech_details():
     tech_df.sort_values(by=['Number of items'], ascending=False, inplace=True)
     tech_df['Number of items'] = tech_df['Number of items'].apply(lambda x: f"{x:,}")
     tech_df.set_index('Source', inplace=True)
-    tech_df = tech_df.reindex(columns=['Number of items','Earliest','Most recent','Average length','Longest','Shortest','Readability score','Grade level'])
+    tech_df = tech_df.reindex(columns=['Number of items','Earliest','Most recent',
+                        'Average length','Longest','Shortest','Readability score',
+                        # 'Grade level'
+                        ])
     #return tech_df.style.format({'Number of items':'{:,}'})
     return tech_df
 

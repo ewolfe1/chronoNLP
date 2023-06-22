@@ -113,4 +113,4 @@ if ready:
         st.write("""More information can be found in the respective documentation: \
         https://www.nltk.org/api/nltk.html, https://textblob.readthedocs.io/en/dev/, \
         https://scikit-learn.org/stable/user_guide.html""")
-placeholder.empty()
+    placeholder.empty()

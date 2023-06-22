@@ -7,8 +7,8 @@ from datetime import datetime
 import plotly.graph_objs as go
 from wordcloud import WordCloud
 import matplotlib.pyplot as plt
-# from multi_rake import Rake
-from rake_nltk import Rake
+from ast import literal_eval
+import random
 
 from nltk import FreqDist
 from textblob import TextBlob, Word
@@ -31,14 +31,12 @@ def get_wc(tf):
 
 def results_title(tf):
 
-    # ms = datetime.strftime(datetime.strptime(tf["date_start"],'%Y-%m'),'%B %Y')
-    # me = datetime.strftime(datetime.strptime(tf["date_end"],'%Y-%m'),'%B %Y')
     ms = getdata.format_dates(tf["date_start"])
     me = getdata.format_dates(tf["date_end"])
 
     kwd_label = {'Terms':'Most frequent terms',
                 'TF-IDF':'TF-IDF results',
-                'Keywords':'RAKE keywords'}
+                'TopicRank':'TopicRank results'}
 
     dates = f"{ms} to {me}" if ms != me else ms
     source = '/'.join(tf['source'])
@@ -83,36 +81,42 @@ def get_tf(df, tf):
 
     return common_df, tf
 
-# RAKE keywords
-@st.cache_data
-def get_rake(df, tf):
+
+def combine_terms(kwdlist):
+    return ', '.join(natsorted(set([term for terms in kwdlist for term in terms])))
+
+# topic rank keywords
+# @st.cache_data
+def get_topicrank(df, tf):
 
     class_df, tf, omit = filter_df(df, tf)
 
-    rake = Rake(min_chars=3, max_words=tf['ngram'], min_freq=3)
-    rake_df = pd.DataFrame(columns=['term'])
+    t_df = class_df[['date','cleandate','keywords']].copy()
+    try:
+        t_df['keywords'] = t_df['keywords'].apply(literal_eval)
+    except:
+        pass
 
-    data_full = ' '.join(class_df.full_text)
-    data_clean = ' '.join(class_df.clean_text)
+    t_df = t_df.explode('keywords', ignore_index=True)
+    t_df[['included terms','topic', 'TopicRank', 'count']] = t_df['keywords'].apply(lambda x: pd.Series(x))
+    t_df['TopicRank'] = t_df['TopicRank'].astype(float)
+    t_df['count'] = t_df['count'].astype(int)
+    t_df['included terms'] = t_df['included terms'].str.split('|')
+    t_df = t_df[~t_df.topic.isin([None,'','♦'])].copy()
+    t_df = t_df.drop('keywords', axis=1)
+    t_df.reset_index(inplace=True, drop=True)
 
-    for keyword, score in (rake.apply(data_full)):
-        # rake_df = rake_df.append({'term':keyword,
-        #                           'rake_score':score}, ignore_index=True)
-        rake_df = pd.concat([rake_df, pd.DataFrame([{'term':keyword,
-                                                'rake_score':score}])])
+    common_df = t_df.groupby('topic').agg({'TopicRank': 'mean', 'count': 'sum', \
+                                        'included terms': lambda x: combine_terms(x)}).\
+                                        sort_values(by='count', ascending=False).reset_index()
+    common_df = common_df[common_df['count'] > 1].copy()
 
-    # # filter df to exclude certain phrases
-    rake_df = rake_df.sort_values('rake_score', ascending=False).head(200)
-    rake_df = rake_df[~rake_df['term'].isin(omit)]
+    tf['grouped_text_dict'] = {r['topic']:r['count'] for i,r in common_df[:200].iterrows()}
 
-    for i,r in rake_df.iterrows():
-        rake_df.at[i, 'frequency'] = data_clean.count(r.term)
+    # get most frequent terms and return table of data for chosen month/source
+    common_df.set_index('topic', inplace=True)
+    return common_df[:10], tf
 
-    rake_df['frequency'] = rake_df['frequency'].astype(int)
-    tf['grouped_text_dict'] = {r['term']:r['rake_score'] for i,r in rake_df.iterrows()}
-    rake_df.set_index('term', inplace=True)
-
-    return rake_df.head(10), tf
 
 # TF-IDF
 @st.cache_data
@@ -146,8 +150,7 @@ def tf_form(tf):
     # form to allow user input
     with st.form(key=f'tf{n}_form'):
 
-        tf['kwd'] = st.selectbox('Term frequency vs. TF-IDF rankings',['Terms','TF-IDF'], key=f'tf{n}kwd', index=0)
-        # Note: have omitted 'Keywords' from the above list due to excessive processing times
+        tf['kwd'] = st.selectbox('Term frequency vs. TF-IDF rankings vs. TopicRank',['Terms','TF-IDF','TopicRank'], key=f'tf{n}kwd', index=0)
 
         daterange = state.daterange
         df = state.df_filtered
@@ -160,7 +163,7 @@ def tf_form(tf):
             sources,key=f'tfs{n}',default=None)
 
         # tf['source'] = st.multiselect('Source(s)',sources,key=f'tfs{n}',default=sources[1])
-        tf['ngram'] = st.selectbox('Ngrams',[1,2,3],key=f'tfng{n}', index=n-1)
+        tf['ngram'] = st.selectbox('Ngrams (Term frequency and TF-IDF only)',[1,2,3],key=f'tfng{n}', index=n-1)
         tf['omit'] = st.text_input('Terms to omit from the results (separated by a comma)',key=f'tfmin{n}')
 
         tf_submit_button = st.form_submit_button(label='Update search')
@@ -200,8 +203,8 @@ def tf_results(tf):
             t_df, tf = get_tf(df, tf)
         elif tf['kwd'] == 'TF-IDF':
             t_df, tf = get_tfidf(df, tf)
-        elif tf1['kwd'] == 'Keywords':
-            t_df, tf = get_rake(df, tf)
+        elif tf['kwd'] == 'TopicRank':
+            t_df, tf = get_topicrank(df, tf)
 
         st.markdown(results_title(tf))
         tfres_tabs1, tfres_tabs2, tfres_tabs3 = st.tabs(('Word cloud','Table view','Time chart'))
@@ -209,20 +212,17 @@ def tf_results(tf):
         with tfres_tabs1:
 
             st.write('*Top 200 terms, weighted by frequency*')
-            # wordcloud
             wc = get_wc(tf)
             st.pyplot(wc)
 
         with tfres_tabs2:
 
             st.write('*Top ten terms and frequency count*')
-            # table
             st.table(t_df)
 
         with tfres_tabs3:
 
             st.write('*Top five terms plotted over time*')
-            # graph
             st.plotly_chart(plot_tf_month(t_df, tf, df), use_container_width=True)
 
     except ValueError as ve:

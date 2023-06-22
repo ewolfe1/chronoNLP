@@ -5,6 +5,7 @@ streamlit-webrtc
 streamlit-aggrid
 streamlit-extras
 spacy-transformers
+pytextrank
 statistics
 natsort==7.1.1
 seaborn

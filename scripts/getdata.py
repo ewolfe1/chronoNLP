@@ -9,6 +9,7 @@ state = st.session_state
 import spacy
 from spacy.lang.en.stop_words import STOP_WORDS
 from spacytextblob.spacytextblob import SpacyTextBlob
+import pytextrank
 import spacy_transformers
 import seaborn as sns
 import time
@@ -34,6 +35,7 @@ def load_model():
     nlp.Defaults.stop_words |= {'the','we','she','he','said','it','like'}
     nlp.add_pipe('textdescriptives')
     nlp.add_pipe("spacytextblob")
+    nlp.add_pipe("topicrank")
 
     return nlp
 
@@ -105,8 +107,8 @@ def preprocess(df):
 
     # check for already preprocessed data
     cols_to_check = ['clean_text','lemmas','grade_level','readability',
-                    'polarity','subjectivity','compound','label_compound',
-                    'pos_all','entities_all']
+                    'polarity','subjectivity',
+                    'pos_all','entities_all','keywords']
 
     if all((c in df.columns) and (df[c].count()==len(df)) for c in cols_to_check):
         st.markdown('Data appears to be already preprocessed.')
@@ -146,18 +148,22 @@ def preprocess(df):
         df.at[i,'readability'] = doc._.readability['flesch_reading_ease']
 
         # sentiment and Objectivity ratings from textblob
-        df.at[i,'polarity'] = doc._.blob.polarity
-        df.at[i,'subjectivity'] = doc._.blob.subjectivity
+        df.at[i,'polarity'] = doc._.blob.polarity # negative vs. positive    (-1.0 => +1.0)
+        df.at[i,'subjectivity'] = doc._.blob.subjectivity # objective vs. subjective (+0.0 => +1.0)
 
         # pos and ner
         df.at[i,'pos_all'] =  [(clean_tok(t.text), t.pos_) for t in doc if t.pos_ not in ['PUNCT','SPACE']]
         df.at[i, 'entities_all'] = [(clean_tok(ent.text), ent.label_) for ent in doc.ents]
+
+        # tpoicrank keywords (chunks, term, rank, count)
+        df.at[i,'keywords'] = [('|'.join(set([str(p).lower() for p in phrase.chunks])), phrase.text.lower(), f"{phrase.rank:.04f}", str(phrase.count)) for phrase in doc._.phrases]
 
         ct += 1
 
     # update dates
     df['date'] = df['date'].apply(lambda x: parse_date(x))
     df['cleandate'] = df['date'].apply(lambda x: get_cleandate(x))
+    df['keywords'] = df['keywords'].astype(object)
     df = df[~df['clean_text'].isnull()]
 
     nlp_placeholder.markdown('*Text cleaning and lemmatization complete.*')
@@ -299,7 +305,7 @@ def check_user_df():
 
     cols_to_check = ['label','date','source','full_text','uniqueID','clean_text',
             'lemmas','grade_level','readability','polarity','subjectivity',
-            'cleandate']
+            'cleandate','keywords']
     df = state.user_df
     if all(c in df.columns for c in cols_to_check):
         return True
@@ -323,7 +329,7 @@ def set_user_data(df, daterange):
 def display_user_df(df):
 
     # display truncated dataset
-    t_df = df.sample(3).copy().assign(hack='').set_index('hack')
+    t_df = df.sample(2).copy().assign(hack='').set_index('hack')
     for c in t_df.columns:
         try:
             t_df[c] = t_df[c].apply(lambda x: x[:100] + '...' if len(str(x)) > 100 else x)
@@ -441,7 +447,6 @@ def read_zip(zf):
 
 
 # allow user upload (csv or zip of txt files)
-@st.cache_data
 def user_upload(uploaded_file):
 
     if uploaded_file.type == 'text/csv':

@@ -59,7 +59,7 @@ if ready:
             num_ent = st.slider('Number of results to display', 5, 50, value=15, step=5, key="num_ent")
         with num_ent_cols[2]:
             with st.expander('More about named entities'):
-                st.write("""**Named entity recognition (NER) tagging** is another NLP taks that uses \
+                st.write("""**Named entity recognition (NER) tagging** is a common NLP task that uses \
                 statistical predictions to identify and label a variety of named and numeric entities \
                 within a given text. There are many potential NER categories, but spaCy reconizes the \
                 following:""")
