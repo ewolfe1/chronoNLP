@@ -280,7 +280,6 @@ def get_re_pattern(term):
 
     return pattern
 
-
 def kwic(df, term):
 
     if type(term) == list:
@@ -326,6 +325,28 @@ def kwic(df, term):
     kwic_df.set_index('cleandate', inplace=True)
     return kwic_df
 
+# wordcloud
+def get_wc(grouped_text_dict):
+
+    wordcloud = WordCloud(background_color="white", colormap='twilight').generate_from_frequencies(grouped_text_dict)
+    wc = plt.imshow(wordcloud, interpolation='bilinear')
+    plt.axis("off")
+    plt.close()
+    return wc.figure
+
+def get_freq(l):
+
+    tb_to_eval = TextBlob(l)
+    grouped_text = FreqDist([' '.join(ng) for ng in tb_to_eval.ngrams(1)]).most_common(200)
+    grouped_text = [g for g in grouped_text if g[0].lower() not in stop_words and g[0].lower().isalpha()]
+    grouped_text_dict = {t:f for t,f in grouped_text}
+    wc = get_wc(grouped_text_dict)
+
+    common_df = pd.DataFrame(grouped_text[:20], columns=['term','frequency'])
+    common_df.set_index('term', inplace=True)
+
+    return wc, common_df
+
 # look at nearby words
 def cooccurence(df):
 
@@ -333,19 +354,8 @@ def cooccurence(df):
     right = ' '.join(df[~df.right.isnull()].right.str.lower().tolist())
     all = ' '.join([left, right])
 
-    def get_freq(l):
+    left_wc, left_df = get_freq(left)
+    right_wc, right_df = get_freq(right)
+    all_wc, all_df = get_freq(all)
 
-        tb_to_eval = TextBlob(l)
-        grouped_text = FreqDist([' '.join(ng) for ng in tb_to_eval.ngrams(1)]).most_common(200)
-        grouped_text = [g for g in grouped_text if g[0].lower() not in stop_words and g[0].lower().isalpha()]
-        # grouped_text_dict = {t:f for t,f in grouped_text}
-        common_df = pd.DataFrame(grouped_text[:10], columns=['term','frequency'])
-        common_df.set_index('term', inplace=True)
-
-        return common_df
-
-    left_df = get_freq(left)
-    right_df = get_freq(right)
-    all_df = get_freq(all)
-
-    return left_df, right_df, all_df
+    return left_wc, left_df, right_wc, right_df, all_wc, all_df

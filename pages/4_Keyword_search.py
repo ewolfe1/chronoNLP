@@ -142,65 +142,21 @@ if ready:
 
                     st.write('**View most common words occurring nearby the selected keyword(s)**')
                     kwd_tf_cols = st.columns((1,2,2,2))
-                    left_df, right_df, all_df = kwsearchproc.cooccurence(kwic_df)
+                    left_wc, left_df, right_wc, right_df, all_wc, all_df = kwsearchproc.cooccurence(kwic_df)
                     with kwd_tf_cols[1]:
                         st.write('Left and Right of the keyword')
                         st.write(all_df)
+                        st.write(all_wc)
                     with kwd_tf_cols[2]:
                         st.write('Left only')
                         st.write(left_df)
+                        st.write(left_wc)
                     with kwd_tf_cols[3]:
                         st.write('Right only')
                         st.write(right_df)
+                        st.write(right_wc)
 
-
-
-
-    # for tab in kw_terms_tabs[1:]:
-    #     with tab:
-    #         st.write('test')
-
-
-
-    #
-    #     # counts by source
-    #     indivsrc = st.empty()
-    #     if len(df.source.unique()) > 1:
-    #
-    #         # with st.expander('View plots by individual sources'):
-    #         if st.button('View plots by individual sources'):
-    #
-    #             with indivsrc.container():
-    #
-    #                 # plot all terms
-    #                 kwsearchproc.get_tabs(df, stlist, omit)
-    #                 if len(stlist) > 1:
-    #
-    #                     # plot individual terms
-    #                     for term in stlist:
-    #                         kwsearchproc.get_tabs(df, term, omit)
-    #
-    # with kwd_tab2:
-    #
-    #     for term in stlist:
-    #         st.write(f'#### {term}')
-    #         # st.write(kwsearchproc.kwic(df, term), unsafe_allow_html=True)
-    #         kwic_df = kwsearchproc.kwic(df, term)
-    #         #st.write(kwic_df)
-    #         # st.write(kwsearchproc.kwic(df, term).to_markdown(None), use_container_width=True)
-    #
-    #         st.write('**View most common words occurring nearby the selected keyword(s)**')
-    #         kwd_tf_cols = st.columns((1,2,2,2))
-    #         left_df, right_df, all_df = kwsearchproc.cooccurence(kwic_df)
-    #         with kwd_tf_cols[1]:
-    #             st.write('Left and Right of the keyword')
-    #             st.write(all_df)
-    #         with kwd_tf_cols[2]:
-    #             st.write('Left only')
-    #             st.write(left_df)
-    #         with kwd_tf_cols[3]:
-    #             st.write('Right only')
-    #             st.write(right_df)
+    st.write("<style>img {margin:0}", unsafe_allow_html=True)
 
 
     kwd_process.empty()
