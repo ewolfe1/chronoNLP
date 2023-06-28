@@ -38,7 +38,7 @@ def items_by_source(dist_val):
 
     # sorting this way to ensure label is sequential
     for source in df.source.value_counts(ascending=True).keys():
-    # for source in df.source.unique():
+
         d_df = df[df.source==source].groupby('date')
 
         if 'items' in dist_val:

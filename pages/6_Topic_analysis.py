@@ -99,7 +99,6 @@ if ready:
 
         st.caption('Click an item in the legend to exclude from the results. Double click to isolate that item.')
 
-
         st.plotly_chart(topicproc.topics_by_month(lda_model, topic_df, ta_abs_btn),use_container_width=True, height=400)
 
         # perform topic modeling and convert to df
@@ -124,21 +123,28 @@ if ready:
                     st.markdown(f'**Top keywords**')
                     st.markdown(f"{', '.join([lda_model.id2word[t[0]] for t in lda_model.get_topic_terms(i)])}")
 
-                # try:
-                #     wc = topicproc.get_wc(lda_model, i)
-                # except:
-                #     raise
-                #     wc = None
-                #     st.markdown(f'Topic {i+1} has no statistically significant results to display')
-                #
-                # if wc:
-                #     sa_cols[2].pyplot(wc)
+                try:
+                    wc = topicproc.get_wc(lda_model, i)
+                except:
+                    raise
+                    wc = None
+                    st.markdown(f'Topic {i+1} has no statistically significant results to display')
+
+                if wc:
+                    sa_cols[2].pyplot(wc)
 
 
     with st.expander('What is the ideal number of topics to generate?'):
 
         st.write('The ideal number of topics for a given set of documents will vary, depending on factors such as ***content, thematic cohesiveness, and others...*** By comparing certain metrics, the user can refine the number of topics best suited for a given set of documents.')
         #st.write('If you want to evaluate a number of topics, please note that it will take several minutes.')
+
+        st.markdown("""In short, the **Perplexity** is an intrinsic evaluation measure of the predictive quality \
+        of the language model, with a lower number representing a better model. While this is useful for machine \
+        learning tasks, it may not be the best measure for creating a human interpretable model.""")
+        st.markdown("""**Coherence** is a measure of the internal semantic similiarity within a topic, with a higher \
+        number representing a more semantically clear topic. This number represents the overall topics’ interpretability\
+        and is likely the better measure to use when creating a model to be visually reviewed.""")
 
         explore_topic_btn = st.button(label='Explore topic coherence for this dataset')
 
@@ -169,13 +175,10 @@ if ready:
             topiceval_placeholder.empty()
             st.markdown("""This plot shows the evaluations of a variety of topic models created using the Gensim \
             implementation of Latent Dirichlet Allocation (LDA) method.""")
-            st.markdown("""In short, the **Perplexity** is an intrinsic evaluation measure of the predictive quality \
-            of the language model, with a lower number representing a better model. While this is useful for machine \
-            learning tasks, it may not be the best measure for creating a human interpretable model.""")
-            st.markdown("""**Coherence** is a measure of the internal semantic similiarity within a topic, with a higher \
-            number representing a more semantically clear topic. This is likely the better measure to use when creating \
-            a model to be visually reviewed. ***--a number that represents the overall topics’ interpretability and is \
-            used to assess the topics’ quality.***""")
+
+            coh_tops = coherence_df.sort_values('Coherence', ascending=False)[:3]['Number of topics'].tolist()
+            st.write(f"**Based on these results, the ideal number of topics for this dataset would likely be *{coh_tops[0]}, {coh_tops[1]}, or {coh_tops[2]}*.**")
+
             coh_cols = st.columns([3,1])
             with coh_cols[0]:
 

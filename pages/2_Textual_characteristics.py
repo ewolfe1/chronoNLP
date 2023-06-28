@@ -50,8 +50,6 @@ if ready:
 
         tc_placeholder.write(f"**Total word count:** {total_words:,}")
 
-        st.write(df_pos)
-
     with tc_tabs2:
         st.write('### Named entities in the text')
         num_ent_cols = st.columns((2,1,5))
