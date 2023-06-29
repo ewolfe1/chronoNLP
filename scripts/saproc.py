@@ -5,8 +5,8 @@ from datetime import datetime
 import plotly.graph_objs as go
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-# from transformers import pipeline
-# classifier = pipeline("sentiment-analysis", model="michellejieli/emotion_text_classifier")
+from transformers import pipeline
+classifier = pipeline("sentiment-analysis", model="michellejieli/emotion_text_classifier")
 import statistics
 import colorlover as cl
 colors = cl.to_rgb(cl.scales['7']['qual']['Set2'])
