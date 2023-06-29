@@ -5,8 +5,8 @@ from datetime import datetime
 import plotly.graph_objs as go
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
-from transformers import pipeline
-classifier = pipeline("sentiment-analysis", model="michellejieli/emotion_text_classifier")
+# from transformers import pipeline
+# classifier = pipeline("sentiment-analysis", model="michellejieli/emotion_text_classifier")
 import statistics
 import colorlover as cl
 colors = cl.to_rgb(cl.scales['7']['qual']['Set2'])
@@ -80,4 +80,47 @@ def get_sent_boxplot(df):
         opacity=0.6, x0=source))
 
     fig.update_layout(showlegend=False)
+    return fig
+
+# emotion
+def split_string(text, n):
+    # Split a text string into groups of n characters
+    return [text[i:i+n] for i in range(0, len(text), n)]
+
+def merge_dicts(dicts):
+    # Merge a list of dictionaries and calculate the average of similar keys
+    result = {}
+    for d in dicts:
+        try:
+            result[d['label']].append(d['score'])
+        except KeyError:
+            result[d['label']] = [d['score']]
+
+    for key in result:
+        result[key] = statistics.mean(result[key])
+
+    return result
+
+def get_emotion_plot(df):
+
+    emotions = ['sadness','anger','fear','joy','disgust','surprise'] # + ['neutral']
+    
+    fig = go.Figure()
+
+    d_df = df.groupby('cleandate')
+
+    for emo in [e for e in emotions if e in df.columns]:
+
+        # emotions
+        sents = [g[emo].mean() for n,g in d_df]
+        # emotions count
+        sents = [g[emo].count() for n,g in d_df]
+        # emotions normalized
+        sents = [g[emo].count()/len(g) for n,g in d_df]
+
+        # sum of all sources
+        fig.add_trace(go.Scatter(x=[n for n,g in d_df], y=sents,
+                        name=emo, mode='lines', line_shape='spline',line_smoothing=.2
+                ))
+
     return fig
