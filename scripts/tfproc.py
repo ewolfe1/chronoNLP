@@ -9,12 +9,13 @@ from wordcloud import WordCloud
 import matplotlib.pyplot as plt
 from ast import literal_eval
 import random
+import re
 
 from nltk import FreqDist
 from textblob import TextBlob, Word
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.feature_extraction.text import TfidfTransformer
-from scripts import tools, getdata
+from scripts import tools, getdata, kwsearchproc
 
 # wordcloud
 def get_wc(tf):
@@ -82,8 +83,16 @@ def get_tf(df, tf):
     return common_df, tf
 
 
-def combine_terms(kwdlist):
-    return ', '.join(natsorted(set([term for terms in kwdlist for term in terms])))
+def combine_terms(kwdlist, tf):
+
+    termlist = list(set([term for terms in kwdlist for term in terms]))
+
+    if tf['num_included'] == 'All':
+        return ', '.join(natsorted(termlist))
+    elif len(termlist) <= 15:
+        return ', '.join(natsorted(termlist))
+    else:
+        return ', '.join(natsorted(random.sample(termlist, 15)))
 
 # topic rank keywords
 # @st.cache_data
@@ -100,14 +109,15 @@ def get_topicrank(df, tf):
     t_df = t_df.explode('keywords', ignore_index=True)
     t_df[['included terms','topic', 'TopicRank', 'count']] = t_df['keywords'].apply(lambda x: pd.Series(x))
     t_df['TopicRank'] = t_df['TopicRank'].astype(float)
-    t_df['count'] = t_df['count'].astype(int)
+    t_df['count'] = t_df['count'].fillna(0).astype(int)
     t_df['included terms'] = t_df['included terms'].str.split('|')
+    # st.write(t_df['included terms'])
     t_df = t_df[~t_df.topic.isin([None,'','♦'])].copy()
     t_df = t_df.drop('keywords', axis=1)
     t_df.reset_index(inplace=True, drop=True)
 
     common_df = t_df.groupby('topic').agg({'TopicRank': 'mean', 'count': 'sum', \
-                                        'included terms': lambda x: combine_terms(x)}).\
+                                        'included terms': lambda x: combine_terms(x, tf)}).\
                                         sort_values(by='count', ascending=False).reset_index()
     common_df = common_df[common_df['count'] > 1].copy()
 
@@ -115,6 +125,7 @@ def get_topicrank(df, tf):
 
     # get most frequent terms and return table of data for chosen month/source
     common_df.set_index('topic', inplace=True)
+
     return common_df[:10], tf
 
 
@@ -124,7 +135,6 @@ def get_tfidf(df, tf):
 
     class_df, tf, omit = filter_df(df, tf)
 
-    #
     cvec = CountVectorizer(stop_words='english', min_df=1, max_df=0.5, ngram_range=(tf['ngram'], tf['ngram']))
     sf = cvec.fit_transform([t for t in class_df[~class_df.clean_text.isnull()].clean_text.values])
     data = ' '.join(class_df[~class_df.clean_text.isnull()].clean_text)
@@ -162,10 +172,12 @@ def tf_form(tf):
         tf['source'] =  st.multiselect('Source(s) (leave blank to select all)',
             sources,key=f'tfs{n}',default=None)
 
-        # tf['source'] = st.multiselect('Source(s)',sources,key=f'tfs{n}',default=sources[1])
-        tf['ngram'] = st.selectbox('Ngrams (Term frequency and TF-IDF only)',[1,2,3],key=f'tfng{n}', index=n-1)
         tf['omit'] = st.text_input('Terms to omit from the results (separated by a comma)',key=f'tfmin{n}')
+        tf['ngram'] = st.radio('Ngrams (Term frequency and TF-IDF only)',[1,2,3],
+                                key=f'tfng{n}', index=n-1, horizontal=True)
 
+        tf['num_included'] = st.radio('List related terms (TopicRank only)', ['All','Sample'],
+                                key=f'tfnr{n}', index=1, horizontal=True)
         tf_submit_button = st.form_submit_button(label='Update search')
 
         return tf, tf_submit_button

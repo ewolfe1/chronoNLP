@@ -30,18 +30,18 @@ def get_sa(df):
     return df
 
 
-@st.cache_resource
-def get_topic_plot(df, sent_query):
+# @st.cache_resource
+def get_topic_plot(df, sent_query, measure):
 
     fig = go.Figure()
 
-    d_df = df.groupby('cleandate')
-    sents = [g['compound'].mean() for n,g in d_df]
-
     if sent_query == 'all':
         # sum of all sources
+        d_df = df.groupby('cleandate')
+        sents = [g[measure].mean() for n,g in d_df]
+
         fig.add_trace(go.Scatter(x=[n for n,g in d_df], y=sents,
-                        name='All', mode='lines', line_shape='spline',line_smoothing=.2,
+                        name='All', mode='lines', line_shape='spline',line_smoothing=.6,
                          marker_color='black'
                 ))
 
@@ -50,13 +50,14 @@ def get_topic_plot(df, sent_query):
         for source in df.source.value_counts(ascending=False)[:5].keys():
 
             d_df = df[df.source==source].groupby('cleandate')
-            sents = [g['compound'].mean() for n,g in d_df]
+            sents = [g[measure].mean() for n,g in d_df]
 
             fig.add_trace(go.Scatter(x=[n for n,g in d_df], y=sents,
-                            name=source, mode='lines', line_shape='spline',line_smoothing=.2,
+                            name=source, mode='lines', line_shape='spline',line_smoothing=.6,
                              marker_color=(state.colors[list(df.source.unique()).index(source)])))
 
-    fig.update_layout(yaxis_range=['-1.05','1.05'])
+    if measure in ['compound']:
+        fig.update_layout(yaxis_range=['-1.05','1.05'])
 
     return fig
 
@@ -82,45 +83,10 @@ def get_sent_boxplot(df):
     fig.update_layout(showlegend=False)
     return fig
 
-# emotion
-def split_string(text, n):
-    # Split a text string into groups of n characters
-    return [text[i:i+n] for i in range(0, len(text), n)]
+# top texts by vader
+def get_sa_markdown(df_filtered, sa_btn):
 
-def merge_dicts(dicts):
-    # Merge a list of dictionaries and calculate the average of similar keys
-    result = {}
-    for d in dicts:
-        try:
-            result[d['label']].append(d['score'])
-        except KeyError:
-            result[d['label']] = [d['score']]
+    sa_df = df_filtered.sort_values('compound', ascending=sa_btn).head(10)
+    sa_df = sa_df[['source','uniqueID','label','cleandate','compound']]
 
-    for key in result:
-        result[key] = statistics.mean(result[key])
-
-    return result
-
-def get_emotion_plot(df):
-
-    emotions = ['sadness','anger','fear','joy','disgust','surprise'] # + ['neutral']
-    
-    fig = go.Figure()
-
-    d_df = df.groupby('cleandate')
-
-    for emo in [e for e in emotions if e in df.columns]:
-
-        # emotions
-        sents = [g[emo].mean() for n,g in d_df]
-        # emotions count
-        sents = [g[emo].count() for n,g in d_df]
-        # emotions normalized
-        sents = [g[emo].count()/len(g) for n,g in d_df]
-
-        # sum of all sources
-        fig.add_trace(go.Scatter(x=[n for n,g in d_df], y=sents,
-                        name=emo, mode='lines', line_shape='spline',line_smoothing=.2
-                ))
-
-    return fig
+    return sa_df

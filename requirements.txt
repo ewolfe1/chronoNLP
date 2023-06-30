@@ -6,6 +6,7 @@ streamlit-aggrid
 streamlit-extras
 spacy-transformers
 transformers
+xformers
 pytextrank
 statistics
 natsort==7.1.1
@@ -22,10 +23,11 @@ rake-nltk
 textdescriptives==1.0.6
 numpy==1.23.0  # Sept 2022, later versions of numpy not compatible with tensorflow-macos==2.9.2
 pillow>=9.5.0 # needed for updated wordcloud
+
 # Choose the correct tensorflow library
-# non- M1 Mac:
+# non-M1/M2  Mac:
 tensorflow
 
-# M1 Mac:
+# M1/M2 Mac:
 # tensorflow-macos
 # tensorflow-metal

@@ -106,6 +106,7 @@ if ready:
 
             for i in range(0,lda_model.num_topics):
                 num_top = len(topic_df[topic_df.top_topic==str(i)])
+
                 try:
                     num_all = topic_df[i].count()
                 except:
@@ -133,11 +134,20 @@ if ready:
                 if wc:
                     sa_cols[2].pyplot(wc)
 
+            # with st.form(key='topic_form'):
+            #     st.write('### Filter the dataset?')
+            #     st.write("""Select one or more topics to limit the active dataset for review on other pages. This filter can be reset on the "Filter this dataset" page using the "Reset all filters" button.""")
+            #     top_filter = st.multiselect("Topic select", [f'Topic {i}' for i in range(1,lda_model.num_topics + 1)],
+            #                     label_visibility="hidden", key="topfilter")
+            #     top_filter_button = st.form_submit_button(label='Apply filter')
+            #
+            # if top_filter_button:
+            #     st.write(top_filter)
+
 
     with st.expander('What is the ideal number of topics to generate?'):
 
-        st.write('The ideal number of topics for a given set of documents will vary, depending on factors such as ***content, thematic cohesiveness, and others...*** By comparing certain metrics, the user can refine the number of topics best suited for a given set of documents.')
-        #st.write('If you want to evaluate a number of topics, please note that it will take several minutes.')
+        st.write('The ideal number of topics for a given set of documents will vary, depending on factors such as ***content, thematic cohesiveness, and others...*** By comparing certain evaluation metrics, the user can refine the number of topics best suited for a given set of documents.')
 
         st.markdown("""In short, the **Perplexity** is an intrinsic evaluation measure of the predictive quality \
         of the language model, with a lower number representing a better model. While this is useful for machine \
