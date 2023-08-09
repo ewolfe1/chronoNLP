@@ -13,8 +13,7 @@ import re
 
 from nltk import FreqDist
 from textblob import TextBlob, Word
-from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.feature_extraction.text import TfidfTransformer
+from sklearn.feature_extraction.text import CountVectorizer, TfidfTransformer
 from scripts import tools, getdata, kwsearchproc
 
 # wordcloud
@@ -98,7 +97,7 @@ def combine_terms(kwdlist, tf):
 # @st.cache_data
 def get_topicrank(df, tf):
 
-    class_df, tf, omit = filter_df(df, tf)
+    class_df, tf, omit = filte  r_df(df, tf)
 
     t_df = class_df[['date','cleandate','keywords']].copy()
     try:

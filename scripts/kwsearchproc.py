@@ -14,10 +14,10 @@ import matplotlib.pyplot as plt
 import spacy
 import nltk
 nltk.download('stopwords')
+nltk.download('punkt')
 from nltk.corpus import stopwords
 stop_words = set(stopwords.words('english'))
 from nltk import FreqDist
-from nltk.corpus import stopwords
 from textblob import TextBlob, Word
 from sklearn.preprocessing import minmax_scale
 from scripts import getdata

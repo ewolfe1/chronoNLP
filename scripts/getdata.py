@@ -25,11 +25,12 @@ from streamlit_extras.switch_page_button import switch_page
 # @st.cache_resource
 def load_model():
 
+    model = 'https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.6.0/en_core_web_sm-3.6.0-py3-none-any.whl'
     try:
-        nlp = spacy.load("en_core_web_sm")
+        nlp = spacy.load(model)
     except:
-        spacy.cli.download("en_core_web_sm")
-        nlp = spacy.load("en_core_web_sm")
+        spacy.cli.download(model)
+        nlp = spacy.load(model)
 
     # add some additional stopwords to list
     nlp.Defaults.stop_words |= {'the','we','she','he','said','it','like'}
@@ -155,7 +156,7 @@ def preprocess(df):
         df.at[i,'pos_all'] =  [(clean_tok(t.text), t.pos_) for t in doc if t.pos_ not in ['PUNCT','SPACE']]
         df.at[i, 'entities_all'] = [(clean_tok(ent.text), ent.label_) for ent in doc.ents]
 
-        # tpoicrank keywords (chunks, term, rank, count)
+        # topicrank keywords (chunks, term, rank, count)
         df.at[i,'keywords'] = [('|'.join(set([str(p).lower() for p in phrase.chunks])), phrase.text.lower(), f"{phrase.rank:.04f}", str(phrase.count)) for phrase in doc._.phrases]
 
         ct += 1
