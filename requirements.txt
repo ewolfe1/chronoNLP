@@ -13,7 +13,7 @@ natsort==7.1.1
 seaborn
 spacytextblob
 spacy==3.6.0
-git+https://github.com/explosion/spacy-models.git@v3.6.0/en_core_web_sm#egg=en_core_web_sm
+https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.6.0/en_core_web_sm-3.6.0.tar.gz
 nltk==3.6.5
 wordcloud
 gensim==4.1.2
