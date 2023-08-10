@@ -97,7 +97,7 @@ def combine_terms(kwdlist, tf):
 # @st.cache_data
 def get_topicrank(df, tf):
 
-    class_df, tf, omit = filte  r_df(df, tf)
+    class_df, tf, omit = filter_df(df, tf)
 
     t_df = class_df[['date','cleandate','keywords']].copy()
     try:

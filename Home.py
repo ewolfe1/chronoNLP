@@ -1,7 +1,6 @@
 import streamlit as st
 state = st.session_state
 from streamlit_extras.switch_page_button import switch_page
-
 # st.session_state.update(st.session_state)
 
 from scripts import tools, getdata

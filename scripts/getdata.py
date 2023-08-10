@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import subprocess
 import zipfile
 from natsort import natsorted
 from datetime import datetime
@@ -22,15 +23,35 @@ from streamlit_extras.switch_page_button import switch_page
 
 
 # load NLP model for spaCy
+@st.cache_resource
+def download_en_core_web_sm():
+    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
+
 # @st.cache_resource
 def load_model():
 
-    model = 'https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.6.0/en_core_web_sm-3.6.0-py3-none-any.whl'
-    try:
-        nlp = spacy.load(model)
-    except:
-        spacy.cli.download(model)
-        nlp = spacy.load(model)
+    # # download_en_core_web_sm()
+    nlp = spacy.load('en_core_web_sm')
+
+    # # Specify the model name (without the version)
+    # model_name = 'en_core_web_sm-3.6.0'
+    #
+    # # Download the model using spacy.cli.download()
+    # spacy.cli.download(model_name)
+    #
+    # # Load the downloaded model using spacy.load()
+    # nlp = spacy.load(model_name)
+
+    # model = 'https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.6.0/en_core_web_sm-3.6.0-py3-none-any.whl'
+    # try:
+    #     nlp = spacy.load(model)
+    # except:
+    #     try:
+    #         spacy.cli.download(model)
+    #         nlp = spacy.load(model)
+    #     except:
+    #         download_en_core_web_sm()
+    #         nlp = spacy.load('en_core_web_sm')
 
     # add some additional stopwords to list
     nlp.Defaults.stop_words |= {'the','we','she','he','said','it','like'}

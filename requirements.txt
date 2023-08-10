@@ -12,7 +12,8 @@ statistics
 natsort==7.1.1
 seaborn
 spacytextblob
-spacy==3.6
+spacy==3.6.0
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.6.0/en_core_web_sm-3.6.0.tar.gz
 nltk==3.6.5
 wordcloud
 gensim==4.1.2
@@ -21,13 +22,17 @@ scikit-learn
 colorlover
 rake-nltk
 textdescriptives==1.0.6
-numpy==1.23.0  # Sept 2022, later versions of numpy not compatible with tensorflow-macos==2.9.2
-pillow>=9.5.0 # needed for updated wordcloud
+# needed to fix spaCy issue
+typing_extensions<4.6.0
+# Sept 2022, later versions of numpy not compatible with tensorflow-macos==2.9.2
+numpy==1.23.0
+# needed for updated wordcloud
+pillow>=9.5.0
 
 # Choose the correct tensorflow library
 # non-M1/M2  Mac:
-tensorflow
+# tensorflow
 
 # M1/M2 Mac:
-# tensorflow-macos
-# tensorflow-metal
+tensorflow-macos
+tensorflow-metal
