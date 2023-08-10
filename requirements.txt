@@ -31,8 +31,8 @@ pillow>=9.5.0
 
 # Choose the correct tensorflow library
 # non-M1/M2  Mac:
-# tensorflow
+tensorflow
 
 # M1/M2 Mac:
-tensorflow-macos
-tensorflow-metal
+# tensorflow-macos
+# tensorflow-metal
