@@ -24,16 +24,17 @@ rake-nltk
 textdescriptives==1.0.6
 # needed to fix spaCy issue
 typing_extensions<4.6.0
-# numpy 2.x is required for compatibility with modern spacy/h5py/thinc binary wheels
-numpy>=2.0.0
+# h5py<3.11 needed for numpy 1.x binary compatibility (3.11+ wheels built against numpy 2.x)
+h5py<3.11.0
+# Sept 2022, later versions of numpy not compatible with tensorflow-macos==2.9.2
+numpy==1.23.0
 # needed for updated wordcloud
 pillow>=9.5.0
 
 # Choose the correct tensorflow library
-# tensorflow 2.16+ is required for numpy 2.x compatibility
 # non-M1/M2  Mac:
-tensorflow>=2.16.0
+tensorflow
 
 # M1/M2 Mac:
-# tensorflow-macos>=2.16.0
+# tensorflow-macos
 # tensorflow-metal
